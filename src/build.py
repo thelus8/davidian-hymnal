@@ -11,7 +11,8 @@ html = html.replace('__SONGS__', json.dumps(songs, ensure_ascii=False)).replace(
 head = '''<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#160d1b">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f8f6fb">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e0a12">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">

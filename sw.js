@@ -1,9 +1,9 @@
 // Offline support: the app shell is cached on install; Google Fonts are cached the first time they load.
-const VERSION = 'hymnal-f4eec822d4';
+const VERSION = 'hymnal-863139a326';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png'];
 
-const FONT_CSS = 'https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap';
+const FONT_CSS = 'https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap';
 
 // Fetch the font stylesheet and every font file it names, so the first visit is enough to work offline.
 async function cacheFonts() {
