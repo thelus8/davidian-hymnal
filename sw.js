@@ -1,5 +1,6 @@
-// Offline support: the app shell is cached on install; Google Fonts are cached the first time they load.
-const VERSION = 'hymnal-3a246e2968';
+// Offline support: the page is loaded fresh when online and from the cache when offline;
+// icons and Google Fonts are cached on install.
+const VERSION = 'hymnal-005ba8c6f3';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png'];
 
@@ -17,7 +18,8 @@ async function cacheFonts() {
 }
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL))
+  // cache: 'reload' skips the browser's HTTP cache, so a new version never stores an older copy of the page
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' }))))
     .then(() => cacheFonts().catch(() => {}))
     .then(() => self.skipWaiting()));
 });
@@ -42,6 +44,19 @@ self.addEventListener('fetch', e => {
     return;
   }
   if (url.origin !== location.origin) return;
+  if (e.request.mode === 'navigate') {
+    // Newest page when online; the saved copy when offline or when the network is too slow to wait for
+    const fromNet = fetch(e.request, { cache: 'no-cache' }).then(res => {
+      if (res.ok) { const copy = res.clone(); caches.open(VERSION).then(c => c.put('index.html', copy)); }
+      return res;
+    });
+    const slow = new Promise(r => setTimeout(r, 3500)).then(() => caches.match('index.html'));
+    e.respondWith(Promise.race([
+      fromNet.catch(() => caches.match('index.html')),
+      slow.then(saved => saved || fromNet),
+    ]));
+    return;
+  }
   e.respondWith(caches.match(e.request, { ignoreSearch: true })
     .then(hit => hit || fetch(e.request))
     .catch(() => caches.match('index.html')));
