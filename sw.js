@@ -1,5 +1,5 @@
 // Offline support: the app shell is cached on install; Google Fonts are cached the first time they load.
-const VERSION = 'hymnal-231dffd8fa';
+const VERSION = 'hymnal-3a246e2968';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png'];
 

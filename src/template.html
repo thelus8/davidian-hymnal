@@ -294,6 +294,42 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
   max-width: calc(100% - 32px); box-sizing: border-box; text-align: center;
 }
 
+/* ---------- Install card ---------- */
+.card.install { flex-wrap: wrap; align-items: flex-start; }
+.card.install img { width: 44px; height: 44px; border-radius: 11px; flex: none; }
+.card.install .t2 { display: block; font: 400 1rem/1.4 var(--lyric); color: var(--ink); margin-top: 2px; }
+.card.install .ios { display: block; font: 400 .88rem/1.5 var(--ui); color: var(--muted); margin-top: 6px; }
+.card.install .ios svg { width: 15px; height: 15px; vertical-align: -2px; color: var(--accent); }
+.card.install > .btns { display: flex; gap: 6px; flex: 0 0 100%; justify-content: flex-end; }
+
+/* ---------- First-time tour ---------- */
+.tour { position: fixed; inset: 0; z-index: 70; }
+.tour-hole {
+  position: fixed; border-radius: 20px; box-shadow: 0 0 0 200vmax rgba(10, 6, 14, .62);
+  pointer-events: none; transition: left .25s, top .25s, width .25s, height .25s;
+}
+.tour-hole::after { content: ""; position: absolute; inset: -4px; border-radius: 24px; border: 2px solid var(--stage-accent); }
+.tour-hole.none::after { display: none; }
+.tour-card {
+  position: fixed; box-sizing: border-box; width: min(340px, calc(100% - 32px)); padding: 20px 20px 16px;
+  background: var(--surface); color: var(--ink); border-radius: 22px; box-shadow: 0 30px 80px rgba(0, 0, 0, .35);
+  transition: left .25s, top .25s;
+}
+.tour-card .step { font: 500 .72rem var(--ui); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+.tour-card h4 { margin: 4px 0 6px; font: 400 1.75rem/1.1 var(--display); }
+.tour-card p { margin: 0; font: 400 1.04rem/1.5 var(--lyric); color: var(--muted); }
+.tour-card ul { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.tour-card li { display: grid; grid-template-columns: 7.2rem 1fr; gap: 10px; align-items: baseline; font: 400 .98rem/1.4 var(--lyric); }
+.tour-card li b { font: 600 .82rem var(--ui); color: var(--accent); white-space: nowrap; }
+.tour-card .ios-steps { margin-top: 10px; font: 400 .9rem/1.5 var(--ui); color: var(--ink); background: var(--surface-2); border-radius: 12px; padding: 10px 12px; }
+.tour-card .ios-steps svg { width: 15px; height: 15px; vertical-align: -2px; color: var(--accent); }
+.tour-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 16px; }
+.tour-foot .btns { display: flex; gap: 6px; }
+.dots { display: flex; gap: 5px; }
+.dots i { width: 6px; height: 6px; border-radius: 3px; background: var(--line); transition: width .2s; }
+.dots i.on { width: 16px; background: var(--accent); }
+.sheet-help { padding: 10px max(18px, env(safe-area-inset-right, 0px)) 0 max(18px, env(safe-area-inset-left, 0px)); border-top: 1px solid var(--line); }
+
 /* ---------- Presentation ---------- */
 #present {
   position: fixed; inset: 0; z-index: 50; background: var(--stage); color: var(--stage-ink); display: flex; flex-direction: column;
@@ -329,6 +365,12 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
       <h1>Hymnal</h1>
       <span class="motto">Hear ye the Rod · Sing ye the Rod</span>
     </section>
+    <div class="card notice install" id="install" hidden>
+      <img src="icons/icon-192.png" alt="">
+      <div><small>Install the app</small><span class="t2">Keep the Hymnal on your home screen and use it offline.</span>
+        <span class="ios" id="installIOS">In Safari, tap <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg> Share, then <b>Add to Home Screen</b>.</span></div>
+      <div class="btns"><button class="pill quiet" id="installLater">Not now</button><button class="pill primary" id="installBtn">Install</button></div>
+    </div>
     <div class="card notice" id="shared" hidden>
       <div><small>Shared service list</small><span class="t" id="sharedText"></span></div>
       <div class="btns"><button class="pill quiet" id="sharedNo">Dismiss</button><button class="pill primary" id="sharedYes">Use list</button></div>
@@ -418,7 +460,8 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
     </div>
   </div>
   <ul class="toc" id="toc" tabindex="-1" autofocus></ul>
-  <div class="sheet-foot">
+  <div class="sheet-help"><button class="linkbtn" id="tourAgain">How to use the Hymnal</button></div>
+  <div class="sheet-foot" style="border-top: 0">
     <span>Appearance</span>
     <div class="seg" role="group" aria-label="Appearance">
       <button data-theme-pick="system" aria-pressed="true">Auto</button>
@@ -473,6 +516,11 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
     <button class="go" data-k="go" id="padGo">Open</button>
   </div>
 </dialog>
+
+<div class="tour" id="tour" role="dialog" aria-modal="true" aria-labelledby="tourTitle" hidden>
+  <div class="tour-hole" id="tourHole"></div>
+  <div class="tour-card" id="tourCard"></div>
+</div>
 
 <div class="toast" id="toast" role="status" hidden></div>
 
@@ -746,6 +794,7 @@ function checkSharedLink() {
   else { pendingShared = list; $('sharedText').textContent = `${list.length} hymns: ${list.join(', ')}`; $('shared').hidden = false; }
   if ($('home').hidden) showHome();
 }
+const sharedMatchOnLoad = /^#s\d/.test(location.hash);
 checkSharedLink();
 addEventListener('hashchange', checkSharedLink);
 $('sharedYes').onclick = () => { setService(pendingShared); $('shared').hidden = true; openService(); };
@@ -971,7 +1020,122 @@ function onSwipe(el, fn) {
 onSwipe($('reader'), step);
 onSwipe($('pStage'), slide);
 
+/* ---------- Install prompt ---------- */
+const SHARE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>';
+const isPWA = !!document.querySelector('link[rel="manifest"]');
+const isStandalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+let installEvent = null;   // Chrome/Android's install prompt, saved until the person taps Install
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvent = e; renderInstall(); });
+addEventListener('appinstalled', () => {
+  installEvent = null; store.set('installed', '1'); renderInstall();
+  toast('Installed. Open the Hymnal from your home screen.');
+});
+const canInstall = () => isPWA && !isStandalone && store.get('installed') !== '1' && (!!installEvent || isIOS);
+function renderInstall() {
+  const later = +store.get('installLater') || 0;
+  const show = canInstall() && store.get('toured') === '1' && Date.now() - later > 14 * 864e5;
+  $('install').hidden = !show;
+  if (!show) return;
+  $('installIOS').hidden = !!installEvent;
+  $('installBtn').hidden = !installEvent;
+}
+async function promptInstall() {
+  if (!installEvent) return;
+  installEvent.prompt();
+  try { await installEvent.userChoice; } catch {}
+  installEvent = null; renderInstall();
+}
+$('installBtn').onclick = promptInstall;
+$('installLater').onclick = () => { store.set('installLater', Date.now()); renderInstall(); };
+
+/* ---------- First-time tour ---------- */
+const TOUR = [
+  { title: 'Welcome', body: `<p>All ${SONGS.length} Davidian songs on your phone, and they work without internet. Here is a quick look around. It takes about a minute.</p>` },
+  { target: () => document.querySelector('.tile[data-n="1"]'), title: 'Tap a number', body: '<p>Every hymn has its number here. Tap one to open it.</p>' },
+  { target: () => $('q').parentElement, title: 'Search', body: '<p>Type a title, a hymn number, or a line you remember, like <i>“four winds”</i>.</p>' },
+  { target: () => document.querySelector('#home [data-pad]'), title: 'Number keypad', body: '<p>When someone calls out a hymn number, tap here and type it, like a church hymn board.</p>' },
+  { target: () => document.querySelector('#home [data-contents]'), title: 'All hymns', body: '<p>Every title, by number or A to Z, plus your favorites. You can also switch between light and dark here.</p>' },
+  { title: 'Inside a hymn', body: `<p>At the top of each hymn you’ll find:</p><ul>
+      <li><b>Favorite</b><span>keeps it on your home screen</span></li>
+      <li><b>Add to service</b><span>builds a list for a service you can share</span></li>
+      <li><b>Repeat chorus</b><span>shows the chorus after every verse</span></li>
+      <li><b>Present</b><span>full-screen slides for a projector or TV</span></li></ul>
+      <p style="margin-top:10px">Swipe left or right to go to the next hymn.</p>` },
+  { title: 'You’re all set', body: () => {
+      if (canInstall() && installEvent) return '<p>Install the Hymnal to open it from your home screen like any other app, even offline.</p>';
+      if (canInstall() && isIOS) return `<p>Add the Hymnal to your home screen to open it like an app, even offline.</p><div class="ios-steps">In Safari, tap ${SHARE_ICON} <b>Share</b>, then <b>Add to Home Screen</b>.</div>`;
+      return '<p>You can see this tour again from the All Hymns menu.</p>';
+    } },
+];
+let tourStep = -1;
+function placeTour() {
+  const st = TOUR[tourStep], el = st.target && st.target();
+  const hole = $('tourHole'), card = $('tourCard');
+  const cw = card.offsetWidth, ch = card.offsetHeight;
+  if (!el) {
+    hole.className = 'tour-hole none';
+    Object.assign(hole.style, { left: innerWidth / 2 + 'px', top: innerHeight / 2 + 'px', width: '0px', height: '0px' });
+    Object.assign(card.style, { left: (innerWidth - cw) / 2 + 'px', top: Math.max(16, (innerHeight - ch) / 2) + 'px' });
+    return;
+  }
+  const r = el.getBoundingClientRect(), pad = 6;
+  hole.className = 'tour-hole';
+  Object.assign(hole.style, { left: r.left - pad + 'px', top: r.top - pad + 'px', width: r.width + pad * 2 + 'px', height: r.height + pad * 2 + 'px' });
+  const below = r.bottom + pad + 14, above = r.top - pad - 14 - ch;
+  const top = below + ch < innerHeight - 16 ? below : Math.max(16, above);
+  const left = Math.min(Math.max(16, r.left + r.width / 2 - cw / 2), innerWidth - cw - 16);
+  Object.assign(card.style, { left: left + 'px', top: top + 'px' });
+}
+function renderTour() {
+  const st = TOUR[tourStep], last = tourStep === TOUR.length - 1;
+  const body = typeof st.body === 'function' ? st.body() : st.body;
+  const installBtn = last && canInstall() && installEvent;
+  $('tourCard').innerHTML = `
+    <span class="step">${tourStep ? `${tourStep} of ${TOUR.length - 1}` : 'Getting started'}</span>
+    <h4 id="tourTitle">${st.title}</h4>${body}
+    <div class="tour-foot">
+      <div class="dots" aria-hidden="true">${TOUR.map((_, i) => `<i class="${i === tourStep ? 'on' : ''}"></i>`).join('')}</div>
+      <div class="btns">
+        ${last ? (installBtn ? '<button class="pill quiet" data-tour="end">Later</button><button class="pill primary" data-tour="install">Install</button>'
+                             : '<button class="pill primary" data-tour="end">Start singing</button>')
+               : `<button class="pill quiet" data-tour="end">Skip</button><button class="pill primary" data-tour="next">${tourStep ? 'Next' : 'Show me'}</button>`}
+      </div>
+    </div>`;
+  const el = st.target && st.target();
+  if (el) el.scrollIntoView({ block: 'center' });
+  requestAnimationFrame(placeTour);
+  $('tourCard').querySelector('[data-tour="next"], [data-tour="install"], [data-tour="end"]:last-child').focus({ preventScroll: true });
+}
+function startTour() {
+  closeDialogs();
+  if (!$('home').hidden) showHome();
+  $('q').value = ''; search();
+  tourStep = 0; $('tour').hidden = false; renderTour();
+}
+function endTour() {
+  $('tour').hidden = true; tourStep = -1;
+  store.set('toured', '1');
+  window.scrollTo(0, 0);
+  renderInstall();
+}
+$('tourCard').addEventListener('click', async e => {
+  const b = e.target.closest('[data-tour]');
+  if (!b) return;
+  if (b.dataset.tour === 'next') { tourStep++; renderTour(); }
+  if (b.dataset.tour === 'end') endTour();
+  if (b.dataset.tour === 'install') { endTour(); await promptInstall(); }
+});
+addEventListener('resize', () => { if (tourStep >= 0) placeTour(); });
+document.addEventListener('keydown', e => {
+  if (tourStep < 0) return;
+  if (e.key === 'Escape') endTour();
+}, true);
+$('tourAgain').onclick = startTour;
+
 if (songFromHash()) show(songFromHash());
+else if (store.get('toured') !== '1' && !sharedMatchOnLoad) startTour();
+renderInstall();
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:' && document.querySelector('link[rel="manifest"]')) {
   // When a new version takes over (after an update is published), reload once so it shows right away.
