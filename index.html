@@ -15,8 +15,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
 <style>
-/* Layout: an app shell. Cover card + frosted search bar over a numeral grid; a side sheet lists every hymn;
-   the reader is one calm column with chorus cards and swipe between hymns. */
+/* Layout: an app shell. Cover card + frosted search bar over a numeral grid; side sheets list every hymn and the
+   service list; the reader is one calm column with chorus cards; presentation mode is a full-screen slide stage. */
 :root {
   --bg: #f8f6fb;
   --surface: #ffffff;
@@ -29,6 +29,9 @@
   --glass: rgba(248, 246, 251, .74);
   --glow: rgba(176, 25, 74, .09);
   --shadow: 0 1px 2px rgba(30, 10, 40, .04), 0 8px 24px rgba(30, 10, 40, .06);
+  --stage: #0b0710;
+  --stage-ink: #f6eff8;
+  --stage-accent: #ff8fb0;
   --display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
   --lyric: "Newsreader", "Iowan Old Style", Georgia, serif;
   --ui: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
@@ -75,16 +78,31 @@ svg.i { width: 20px; height: 20px; flex: none; }
 }
 .round:hover { border-color: var(--accent); }
 .round:active { transform: scale(.94); }
+.round.sm { width: 34px; height: 34px; }
+.round.sm svg { width: 16px; height: 16px; }
+.round:disabled { opacity: .3; cursor: default; border-color: var(--line); }
 
 .bar {
   position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
   background: var(--glass); border-bottom: 1px solid var(--line);
   -webkit-backdrop-filter: saturate(180%) blur(18px); backdrop-filter: saturate(180%) blur(18px);
 }
-.bar .wrap { display: flex; align-items: center; gap: 10px; padding-block: 10px; }
+.bar .wrap { display: flex; align-items: center; gap: 8px; padding-block: 10px; }
+
+.pill {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 40px; padding: 0 16px;
+  border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font: 500 .88rem var(--ui); white-space: nowrap;
+}
+.pill svg { width: 17px; height: 17px; flex: none; }
+.pill:hover { border-color: var(--accent); }
+.pill[aria-pressed="true"] { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+.pill[aria-pressed="true"] .fill { fill: currentColor; }
+.pill.primary { background: var(--accent); border-color: transparent; color: #fff; }
+.pill.quiet { background: none; border-color: transparent; color: var(--muted); }
+.pill:disabled { opacity: .4; cursor: default; }
 
 /* ---------- Home ---------- */
-.hero { padding-block: 16px 14px; display: grid; gap: 12px; }
+.hero { padding-block: 16px 14px; display: grid; gap: 10px; }
 .cover {
   position: relative; overflow: hidden; border-radius: 24px; min-height: 196px; color: #fff;
   display: flex; flex-direction: column; justify-content: flex-end; padding: 22px 22px 20px;
@@ -100,17 +118,19 @@ svg.i { width: 20px; height: 20px; flex: none; }
 }
 .cover .eyebrow { font: 500 .72rem var(--ui); letter-spacing: .22em; text-transform: uppercase; opacity: .8; }
 .cover h1 { margin: 2px 0 4px; font: 400 clamp(2.9rem, 11vw, 3.8rem)/.95 var(--display); letter-spacing: -.01em; }
-.cover h1 em { font-style: italic; color: #ffb3c7; }
 .cover .motto { font: italic 400 1rem var(--lyric); opacity: .85; }
 
-.continue {
-  display: flex; align-items: center; gap: 12px; text-align: left; width: 100%;
+.card {
+  display: flex; align-items: center; gap: 12px; text-align: left; width: 100%; box-sizing: border-box;
   border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--shadow);
 }
-.continue .badge { font: 600 .9rem var(--ui); font-variant-numeric: tabular-nums; color: var(--accent); background: var(--accent-soft); border-radius: 10px; min-width: 2.6rem; padding: 7px 0; text-align: center; }
-.continue small { display: block; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-.continue span.t { font: 500 1.05rem var(--lyric); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
-.continue > div { min-width: 0; flex: 1; }
+.card .badge { font: 600 .9rem var(--ui); font-variant-numeric: tabular-nums; color: var(--accent); background: var(--accent-soft); border-radius: 10px; min-width: 2.6rem; padding: 7px 0; text-align: center; display: grid; place-items: center; }
+.card .badge svg { width: 18px; height: 18px; }
+.card small { display: block; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.card .t { font: 500 1.05rem var(--lyric); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.card > div { min-width: 0; flex: 1; }
+.card.notice { background: var(--accent-soft); border-color: transparent; box-shadow: none; flex-wrap: wrap; }
+.card.notice .btns { display: flex; gap: 6px; }
 
 .field { position: relative; flex: 1; min-width: 0; }
 .field > svg { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
@@ -127,18 +147,30 @@ svg.i { width: 20px; height: 20px; flex: none; }
 .section-label { display: flex; justify-content: space-between; align-items: baseline; padding-block: 18px 10px; font: 500 .75rem var(--ui); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .linkbtn { border: 0; background: none; color: var(--accent); font: 500 .8rem var(--ui); letter-spacing: 0; text-transform: none; padding: 4px 0; }
 
+.favs { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-inline: -4px; padding: 2px 4px 4px; }
+.favs::-webkit-scrollbar { display: none; }
+.fav {
+  flex: none; display: inline-flex; align-items: center; gap: 9px; max-width: 240px; height: 44px; padding: 0 14px 0 6px;
+  border: 1px solid var(--line); background: var(--surface); border-radius: 999px;
+}
+.fav .num-badge { min-width: 2.1rem; padding: 5px 0; }
+.fav span.t { font: 500 1rem var(--lyric); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fav:hover { border-color: var(--accent); }
+
 .board { display: grid; grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 10px; padding-bottom: 48px; }
 .tile {
-  aspect-ratio: 1; max-width: 100%; display: grid; place-items: center;
+  position: relative; aspect-ratio: 1; max-width: 100%; display: grid; place-items: center;
   font: 400 1.9rem/1 var(--display); font-variant-numeric: lining-nums tabular-nums;
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink);
   box-shadow: 0 1px 2px rgba(30, 10, 40, .03);
   transition: transform .15s, border-color .15s, background .15s, color .15s;
 }
+.tile.starred::after { content: ""; position: absolute; top: 8px; right: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
 .tile:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
 .tile:active { transform: scale(.95); background: var(--accent-soft); }
 
 .results { list-style: none; margin: 0; padding: 0 0 48px; display: grid; gap: 8px; }
+.results .group { font: 500 .75rem var(--ui); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 12px 2px 2px; }
 .row {
   width: 100%; display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; text-align: left;
   border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 12px 14px;
@@ -147,6 +179,7 @@ svg.i { width: 20px; height: 20px; flex: none; }
 .num-badge { font: 600 .9rem var(--ui); font-variant-numeric: tabular-nums; color: var(--accent); background: var(--accent-soft); border-radius: 10px; min-width: 2.6rem; padding: 7px 0; text-align: center; }
 .row .t { font: 500 1.12rem/1.3 var(--lyric); min-width: 0; }
 .row .sub { display: block; font: 400 .8rem var(--ui); color: var(--muted); margin-top: 3px; }
+.row .quote { display: block; font: italic 400 .98rem/1.35 var(--lyric); color: var(--muted); margin-top: 3px; }
 .row mark { background: var(--accent-soft); color: var(--accent); border-radius: 4px; padding: 0 2px; }
 .empty { padding: 48px 4px; color: var(--muted); text-align: center; font: italic 1.15rem var(--lyric); }
 
@@ -154,16 +187,24 @@ svg.i { width: 20px; height: 20px; flex: none; }
 .reader-bar .label { flex: 1; min-width: 0; text-align: center; font: 600 .9rem var(--ui); font-variant-numeric: tabular-nums; }
 .reader-bar .label small { display: block; font: 400 .75rem var(--ui); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sizer { display: inline-flex; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; height: 44px; flex: none; }
-.sizer button { border: 0; background: none; width: 42px; font: 600 .82rem var(--ui); }
+.sizer button { border: 0; background: none; width: 40px; font: 600 .82rem var(--ui); }
 .sizer button + button { border-left: 1px solid var(--line); font-size: 1rem; }
 
-.song { padding-block: 28px 40px; view-transition-name: song; }
-.song header { display: grid; gap: 10px; padding-bottom: 24px; margin-bottom: 26px; border-bottom: 1px solid var(--line); }
+.song { padding-block: 22px 40px; }
+.svc-strip {
+  display: flex; align-items: center; gap: 8px; background: var(--accent-soft); color: var(--accent);
+  border-radius: 14px; padding: 6px 6px 6px 14px; margin-bottom: 18px; font: 500 .85rem var(--ui);
+}
+.svc-strip span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.svc-strip button { border: 0; background: var(--surface); color: var(--accent); border-radius: 10px; height: 34px; padding: 0 12px; font: 600 .82rem var(--ui); }
+.svc-strip button:disabled { opacity: .4; cursor: default; }
+.song header { display: grid; gap: 10px; padding-bottom: 22px; margin-bottom: 26px; border-bottom: 1px solid var(--line); }
 .bignum { font: italic 400 4.5rem/.9 var(--display); color: var(--accent); font-variant-numeric: lining-nums; }
 .song h2 { margin: 0; font: 400 clamp(2rem, 7vw, 2.7rem)/1.05 var(--display); text-wrap: balance; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { display: inline-flex; align-items: center; gap: 6px; font: 500 .8rem var(--ui); color: var(--muted); background: var(--surface-2); border-radius: 999px; padding: 6px 12px; }
 .chip svg { width: 14px; height: 14px; }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 
 .stanzas { display: grid; gap: 22px; max-width: 34em; }
 .stanza { display: grid; grid-template-columns: 1.9rem 1fr; gap: 12px; font: 400 var(--lyric-size)/1.55 var(--lyric); }
@@ -171,7 +212,7 @@ svg.i { width: 20px; height: 20px; flex: none; }
 .stanza p { margin: 0; min-width: 0; }
 .chorus { display: block; font: 400 var(--lyric-size)/1.55 var(--lyric); background: var(--surface-2); border-radius: var(--radius); padding: 16px 18px 18px; margin-left: calc(1.9rem + 12px); }
 .chorus .clabel { display: block; font: 600 .7rem var(--ui); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
-.chorus p { font-style: italic; }
+.chorus p { margin: 0; font-style: italic; }
 
 .pager { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 44px; }
 .pager button {
@@ -184,15 +225,16 @@ svg.i { width: 20px; height: 20px; flex: none; }
 .pager span { font: 500 1.02rem var(--lyric); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hint { margin-top: 18px; text-align: center; font: 400 .78rem var(--ui); color: var(--muted); }
 
-/* ---------- All hymns sheet ---------- */
+/* ---------- Sheets and dialogs ---------- */
 dialog.sheet {
   box-sizing: border-box; padding: 0; border: 0; color: var(--ink); background: var(--surface);
   width: min(420px, 100%); max-width: 100%; height: 100%; max-height: 100%;
   margin: 0 0 0 auto; box-shadow: -20px 0 60px rgba(0, 0, 0, .25);
 }
 dialog.sheet[open] { display: flex; flex-direction: column; animation: slide-in .28s cubic-bezier(.2, .8, .2, 1); }
-dialog.sheet::backdrop { background: rgba(10, 6, 14, .45); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+dialog::backdrop { background: rgba(10, 6, 14, .45); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
 @keyframes slide-in { from { transform: translateX(40px); opacity: 0; } }
+@keyframes rise { from { transform: translateY(24px) scale(.98); opacity: 0; } }
 @media (max-width: 599px) {
   dialog.sheet { width: 100%; height: 90%; margin: auto 0 0; border-radius: 24px 24px 0 0; box-shadow: 0 -20px 60px rgba(0, 0, 0, .25); }
   @keyframes slide-in { from { transform: translateY(60px); opacity: 0; } }
@@ -205,29 +247,89 @@ dialog.sheet::backdrop { background: rgba(10, 6, 14, .45); -webkit-backdrop-filt
 .sheet-head h3 { margin: 0; font: 400 2rem/1 var(--display); }
 .sheet-head h3 small { font: 500 .8rem var(--ui); color: var(--muted); margin-left: 6px; }
 .seg { display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--surface-2); border-radius: 999px; padding: 3px; }
-.seg button { border: 0; background: none; border-radius: 999px; padding: 7px 14px; font: 500 .82rem var(--ui); color: var(--muted); }
+.seg button { border: 0; background: none; border-radius: 999px; padding: 7px 12px; font: 500 .82rem var(--ui); color: var(--muted); white-space: nowrap; }
 .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
-.toc { list-style: none; margin: 0; padding: 6px max(10px, env(safe-area-inset-right, 0px)) 6px max(10px, env(safe-area-inset-left, 0px)); overflow-y: auto; flex: 1; overscroll-behavior: contain; }
+.toc, .svc-list { list-style: none; margin: 0; padding: 6px max(10px, env(safe-area-inset-right, 0px)) 6px max(10px, env(safe-area-inset-left, 0px)); overflow-y: auto; flex: 1; overscroll-behavior: contain; }
 .toc:focus { outline: none; }
 .toc button {
-  width: 100%; display: grid; grid-template-columns: 2.6rem 1fr; gap: 10px; align-items: baseline; text-align: left;
+  width: 100%; display: grid; grid-template-columns: 2.6rem 1fr auto; gap: 10px; align-items: baseline; text-align: left;
   border: 0; background: none; border-radius: 12px; padding: 11px 8px;
 }
 .toc button:hover { background: var(--surface-2); }
 .toc .n { font: 600 .9rem var(--ui); font-variant-numeric: tabular-nums; color: var(--muted); text-align: right; }
 .toc .t { font: 400 1.1rem/1.3 var(--lyric); min-width: 0; }
+.toc .star { color: var(--accent); font-size: .8rem; }
 .toc button[aria-current="true"] { background: var(--accent-soft); }
 .toc button[aria-current="true"] .n, .toc button[aria-current="true"] .t { color: var(--accent); }
 .toc .letter { font: 600 .72rem var(--ui); letter-spacing: .12em; color: var(--accent); padding: 14px 10px 4px; }
+.toc .none, .svc-list .none { padding: 40px 16px; text-align: center; color: var(--muted); font: italic 1.05rem/1.5 var(--lyric); }
 .sheet-foot {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-top: 1px solid var(--line);
   padding: 12px max(18px, env(safe-area-inset-right, 0px)) max(14px, env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px));
   font: 500 .8rem var(--ui); color: var(--muted);
 }
 
-::view-transition-old(song), ::view-transition-new(song) { animation-duration: .22s; }
+.addnum { display: flex; gap: 8px; }
+.addnum input {
+  flex: 1; min-width: 0; height: 40px; box-sizing: border-box; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink);
+  border-radius: 999px; padding: 0 16px; font: 400 1rem var(--ui);
+}
+.addnum input:focus { outline: none; border-color: var(--accent); }
+.svc-list li.item { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 8px; border-radius: 12px; }
+.svc-list li.item:hover { background: var(--surface-2); }
+.svc-list .order { font: 500 .78rem var(--ui); color: var(--muted); width: 1.2rem; text-align: right; font-variant-numeric: tabular-nums; }
+.svc-list .open { display: flex; align-items: center; gap: 10px; min-width: 0; border: 0; background: none; text-align: left; padding: 0; }
+.svc-list .open .t { font: 400 1.08rem/1.3 var(--lyric); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.svc-list .ctl { display: flex; gap: 4px; }
+.svc-list .ctl .round { border-color: transparent; background: none; }
+.svc-list .ctl .round:hover { background: var(--surface); border-color: var(--line); }
+.svc-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+
+dialog.pad {
+  box-sizing: border-box; width: min(340px, calc(100% - 32px)); border: 0; border-radius: 26px; padding: 18px 18px 20px;
+  background: var(--surface); color: var(--ink); box-shadow: 0 30px 80px rgba(0, 0, 0, .35);
+}
+dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
+.pad-top { display: flex; justify-content: space-between; align-items: center; font: 500 .75rem var(--ui); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.pad-display { font: 400 4rem/1 var(--display); text-align: center; color: var(--accent); min-height: 4rem; margin-top: 6px; font-variant-numeric: lining-nums; }
+.pad-title { text-align: center; font: 500 1.05rem var(--lyric); color: var(--muted); min-height: 1.5em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 4px; }
+.keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
+.keys button { height: 62px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface-2); font: 400 2rem/1 var(--display); display: grid; place-items: center; }
+.keys button:active { transform: scale(.96); }
+.keys .go { background: var(--accent); color: #fff; border-color: transparent; font: 600 1rem var(--ui); }
+.keys .go:disabled { opacity: .35; cursor: default; }
+.keys .back svg { width: 24px; height: 24px; }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 60;
+  background: var(--ink); color: var(--bg); padding: 11px 18px; border-radius: 999px; font: 500 .88rem var(--ui); box-shadow: var(--shadow);
+  max-width: calc(100% - 32px); box-sizing: border-box; text-align: center;
+}
+
+/* ---------- Presentation ---------- */
+#present {
+  position: fixed; inset: 0; z-index: 50; background: var(--stage); color: var(--stage-ink); display: flex; flex-direction: column;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  user-select: none; -webkit-user-select: none;
+}
+.p-top, .p-bottom { display: flex; align-items: center; gap: 12px; padding: 12px 18px; font: 500 .85rem var(--ui); color: rgba(246, 239, 248, .55); }
+.p-top span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.p-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .14); background: rgba(255, 255, 255, .06); color: var(--stage-ink); display: grid; place-items: center; flex: none; }
+.p-btn:hover { background: rgba(255, 255, 255, .12); }
+.p-btn:disabled { opacity: .25; cursor: default; }
+.p-stage { flex: 1; min-height: 0; position: relative; padding: 1vh 6vw; cursor: pointer; }
+.p-fit { width: 100%; height: 100%; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-family: var(--lyric); line-height: 1.32; }
+.p-label { font: 600 .32em var(--ui); letter-spacing: .18em; text-transform: uppercase; color: var(--stage-accent); margin-bottom: .7em; }
+.p-lines.it { font-style: italic; }
+.p-num { font: italic 400 2.2em/1 var(--display); color: var(--stage-accent); }
+.p-title { font: 400 1.25em/1.05 var(--display); margin: .15em 0 .4em; text-wrap: balance; }
+.p-meta { font: 400 .38em var(--ui); color: rgba(246, 239, 248, .6); }
+.p-progress { flex: 1; height: 3px; background: rgba(255, 255, 255, .12); border-radius: 3px; overflow: hidden; }
+.p-progress i { display: block; height: 100%; background: var(--stage-accent); transition: width .2s; }
+.p-count { font-variant-numeric: tabular-nums; min-width: 4.5em; text-align: center; }
+
 @media (prefers-reduced-motion: reduce) {
-  *, ::view-transition-group(*) { transition: none !important; animation: none !important; }
+  * { transition: none !important; animation: none !important; }
 }
 </style>
 
@@ -239,9 +341,18 @@ dialog.sheet::backdrop { background: rgba(10, 6, 14, .45); -webkit-backdrop-filt
       <h1>Hymnal</h1>
       <span class="motto">Hear ye the Rod · Sing ye the Rod</span>
     </section>
-    <button class="continue" id="continue" hidden>
+    <div class="card notice" id="shared" hidden>
+      <div><small>Shared service list</small><span class="t" id="sharedText"></span></div>
+      <div class="btns"><button class="pill quiet" id="sharedNo">Dismiss</button><button class="pill primary" id="sharedYes">Use list</button></div>
+    </div>
+    <button class="card" id="continue" hidden>
       <span class="badge" id="contNum"></span>
       <div><small>Continue</small><span class="t" id="contTitle"></span></div>
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+    <button class="card" id="svcCard" data-service hidden>
+      <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></span>
+      <div><small>Service list</small><span class="t" id="svcCardText"></span></div>
       <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
     </button>
   </div>
@@ -249,15 +360,22 @@ dialog.sheet::backdrop { background: rgba(10, 6, 14, .45); -webkit-backdrop-filt
     <div class="wrap">
       <div class="field">
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="q" type="search" inputmode="search" autocomplete="off" enterkeyhint="go" placeholder="Search title or number" aria-label="Search hymns by title or number">
+        <input id="q" type="search" inputmode="search" autocomplete="off" enterkeyhint="go" placeholder="Search hymns" aria-label="Search hymns by title, words or number">
         <button id="clear" aria-label="Clear search" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       </div>
+      <button class="round" data-pad aria-label="Number keypad">
+        <svg class="i" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="5" r="1.8"/><circle cx="12" cy="5" r="1.8"/><circle cx="19" cy="5" r="1.8"/><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/><circle cx="5" cy="19" r="1.8"/><circle cx="12" cy="19" r="1.8"/><circle cx="19" cy="19" r="1.8"/></svg>
+      </button>
       <button class="round" data-contents aria-label="All hymns">
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/></svg>
       </button>
     </div>
   </div>
   <main class="wrap">
+    <div id="favSection" hidden>
+      <div class="section-label"><span>Favorites</span></div>
+      <div class="favs" id="favs"></div>
+    </div>
     <div class="section-label"><span id="count"></span><button class="linkbtn" data-contents id="seeAll">See all titles</button></div>
     <div class="board" id="board"></div>
     <ul class="results" id="results" hidden></ul>
@@ -281,17 +399,34 @@ dialog.sheet::backdrop { background: rgba(10, 6, 14, .45); -webkit-backdrop-filt
   <article class="wrap song" id="song"></article>
 </div>
 
+<div id="present" hidden>
+  <div class="p-top">
+    <span id="pTitle"></span>
+    <button class="p-btn" id="pClose" aria-label="Exit presentation">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <div class="p-stage" id="pStage"><div class="p-fit" id="pFit"></div></div>
+  <div class="p-bottom">
+    <button class="p-btn" id="pPrev" aria-label="Previous slide"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <div class="p-progress"><i id="pBar"></i></div>
+    <span class="p-count" id="pCount"></span>
+    <button class="p-btn" id="pNext" aria-label="Next slide"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+  </div>
+</div>
+
 <dialog class="sheet" id="sheet" aria-labelledby="sheetTitle">
   <div class="sheet-head">
     <div class="top">
       <h3 id="sheetTitle">All hymns<small id="sheetCount"></small></h3>
-      <button class="round" id="sheetClose" aria-label="Close">
+      <button class="round" data-close aria-label="Close">
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
       </button>
     </div>
-    <div class="seg" role="group" aria-label="Sort hymns">
+    <div class="seg" role="group" aria-label="Show hymns">
       <button data-sort="num" aria-pressed="true">By number</button>
       <button data-sort="az" aria-pressed="false">A to Z</button>
+      <button data-sort="fav" aria-pressed="false">Favorites</button>
     </div>
   </div>
   <ul class="toc" id="toc" tabindex="-1" autofocus></ul>
@@ -305,6 +440,54 @@ dialog.sheet::backdrop { background: rgba(10, 6, 14, .45); -webkit-backdrop-filt
   </div>
 </dialog>
 
+<dialog class="sheet" id="svcSheet" aria-labelledby="svcTitle">
+  <div class="sheet-head">
+    <div class="top">
+      <h3 id="svcTitle">Service list<small id="svcCount"></small></h3>
+      <button class="round" data-close aria-label="Close">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <form class="addnum" id="addForm" autocomplete="off">
+      <input id="addNum" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Add a hymn by number" aria-label="Hymn number to add">
+      <button class="pill" type="submit">Add</button>
+    </form>
+  </div>
+  <ul class="svc-list" id="svcList" tabindex="-1" autofocus></ul>
+  <div class="sheet-foot">
+    <div class="svc-actions">
+      <button class="pill primary" id="svcStart">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6.5A2.5 2.5 0 0 0 4 21.5"/></svg>Start
+      </button>
+      <button class="pill" id="svcPresent">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Present
+      </button>
+      <button class="pill" id="svcShare">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>Share link
+      </button>
+      <button class="pill quiet" id="svcClear">Clear list</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="pad" id="pad" aria-label="Number keypad">
+  <div class="pad-top"><span>Hymn number</span>
+    <button class="round sm" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="pad-display" id="padDisplay"></div>
+  <div class="pad-title" id="padTitle"></div>
+  <div class="keys" id="keys">
+    <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+    <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+    <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+    <button class="back" data-k="del" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H9l-6 7 6 7h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1zM17 9l-6 6M11 9l6 6"/></svg></button>
+    <button data-k="0">0</button>
+    <button class="go" data-k="go" id="padGo">Open</button>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
 <script>
 const SONGS = [{"n": 1, "title": "Sing, Davidian, Sing", "caps": "SING DAVIDIAN SING", "ref": "Isa.32:8, Hos.2:15, Rev.14:3", "tune": "Kneel at the Cross", "sections": [{"label": "1", "lines": ["Lift up the voice", "Together we sing", "Every Davidian.", "Yes, we will sing;", "We’ll see eye to eye;", "When the Lord brings Zion."]}, {"label": "Chorus", "lines": ["Sing everyone; (Sing everyone)", "Sing everyone; (Sing everyone)", "Sing everyone; (Sing everyone)", "Every Davidian. (Everyone.)"]}, {"label": "2", "lines": ["For He will give", "To us the vineyard;", "Where there’s not one Achan.", "And we will sing", "As in the days of youth", "Oh, sing Davidian."]}, {"label": "3", "lines": ["One hundred and", "forty-four thousand", "who are Davidians.", "They sing a song,", "That no man can learn", "they are the only ones."]}]}, {"n": 2, "title": "The Kingdom is Coming", "caps": "THE KINGDOM IS COMING", "ref": "Dan.2:44", "tune": "My Jesus I Love Thee", "sections": [{"label": "1", "lines": ["The kingdom is coming", "Oh, let us prepare", "That we’ll be found worthy", "With Him to dwell there.", "Oh, glorious kingdom", "with no sinners there.", "We long to be with Him", "It’s glories to share."]}, {"label": "2", "lines": ["Striving to be like Him", "We trust His word sure", "His help is forthcoming", "that we may endure.", "His grace is sufficient", "His Word cannot fail", "To help in our struggle", "That we may prevail."]}, {"label": "3", "lines": ["With His Kingdom so fair", "No joy can compare", "No sickness nor sorrow", "Will ever be there.", "Oh, let us be faithful", "though troubles abound", "Pressing ever onward", "With Him to be found."]}]}, {"n": 3, "title": "I Was Lukewarm", "caps": "I WAS LUKEWARM", "ref": "REV.3:14-16", "tune": "Love Lifted Me", "sections": [{"label": "1", "lines": ["I was found to be lukewarm", "Ready to be spued out.", "I was neither cold nor hot", "Soon to be cast without.", "I was full of unbelief", "And the truth I did doubt.", "Now the Lord has sent the ROD", "And I will shout."]}, {"label": "Chorus", "lines": ["Hear ye the ROD! (Voice of God)", "Hear ye the ROD   (Voice of God)", "Hear ye the voice of GOD!", "Hear ye the ROD!", "Hear ye the ROD!  (Voice of God)", "Hear ye the ROD!   (Voice of God)", "Hear ye the voice of GOD!", "Hear ye the ROD!"]}, {"label": "2", "lines": ["And the Lord has shown to me", "All of my sinful pride.", "For I was needing nothing", "Nor Jesus crucified.", "Rich and increased with the goods", "My Lord I had denied.", "Now the Lord has sent the ROD to be my guide."]}, {"label": "3", "lines": ["And I was poor, naked, blind", "The truth I did despise.", "But He called me to repent", "lest He come to chastise.", "Gold and raiment He counsels,", "and eyesalve for my eyes.", "Now the Lord has sent the ROD for all the wise."]}]}, {"n": 4, "title": "Seal Me, Oh, Seal Me", "caps": "SEAL ME, OH, SEAL ME", "ref": "Rev. 7:2-4", "tune": "Do Lord", "sections": [{"label": "1", "lines": ["John did see the four angels", "holding back the four winds", "Lest the saints will not be sealed", "nor saved from all their sins.", "Only those with the truth", "before the Loud Cry begins", "will receive the seal."]}, {"label": "Chorus", "lines": ["Seal me, oh, seal me,", "before the four winds blow", "Seal me, oh, seal me,", "the time is short I know", "Seal me, oh, seal me,", "e’re the angels let go", "time is short, I know."]}, {"label": "2", "lines": ["And he saw another angel", "coming from the east", "Who will seal the saints of God", "before the image beast", "Only those that hear the Rod", "He takes for kings and priest", "Will receive the seal."]}, {"label": "3", "lines": ["There will be one hundred", "and forty-four thousand sealed", "They are without guile in their mouths", "for they have been healed.", "Only those that are ready", "for the great harvest field", "Will receive the seal."]}]}, {"n": 5, "title": "Jacob’s Time Of Trouble", "caps": "JACOB’S TIME OF TROUBLE", "ref": "Jer.30:5-7", "tune": "This World Is Not My Home", "sections": [{"label": "1", "lines": ["And in the latter days,", "there is a voice of fear,", "A voice of trembling;", "And it is even near;", "Alas, for that day is great;", "There is none like it:", "Jacob’s time of trouble;", "He’ll be saved out of it."]}, {"label": "Chorus", "lines": ["“Fear not Jacob,", "for I will be with thee,”", "This is the Lord’s promise", "unto you and to me,", "For He will stand up", "and deliver everyone.", "Those who have faith in him", "every Davidian."]}, {"label": "2", "lines": ["And in this time of trouble", "we’ll pray day and night.", "“O God deliver us;", "By all thy pow’r and might;”", "For we are troubled", "because of the death decree;", "And we know you will", "deliver and set us free."]}, {"label": "3", "lines": ["And when the wicked shall come", "with the sword to slay;", "O God have mercy and", "deliver us, we’ll pray;", "And then the sword will fall", "as pow’rless as a straw;", "For God will deliver all who will keep His law."]}]}, {"n": 6, "title": "Standing On Mt Zion", "caps": "STANDING ON MT. ZION", "ref": "Rev. 14:1-3", "tune": "Standing On The Promises", "sections": [{"label": "1", "lines": ["Lo, there stood a Lamb", "on the Mt. Zion’s land.", "With Him one hundred", "and forty-four thousand.", "Sealed and saved and led there", "by His mighty hand:", "Standing on Mt. Zion with the Lamb."]}, {"label": "Chorus", "lines": ["Standing, Standing,", "(Standing on the promises, Standing on the promises)", "Standing on Mt. Zion with the great I am.", "Standing, Standing;", "(Standing on the promises, Standing on the promises)", "They’re standing on Mt. Zion with the Lamb."]}, {"label": "2", "lines": ["These are they that follow", "the Lamb where He goes.", "For He has delivered", "them from all their foes.", "In their mouth was found", "no guile for they are those;", "Standing on Mt.", "Zion with the Lamb."]}, {"label": "3", "lines": ["These are they that sing", "a song before God’s throne.", "Their song of deliverance", "that none have known.", "They’re the first fruits of the Lord,", "they are his own;", "Standing on Mt.", "Zion with the Lamb."]}]}, {"n": 7, "title": "The Call For Workers", "caps": "THE CALL FOR WORKERS", "ref": "Matt.20:7", "tune": "Call For Reapers", "sections": [{"label": "1", "lines": ["Far and near the signs are telling", "of the great and dreadful day", "Far and near men’s hearts are failing", "for some light to guide the way."]}, {"label": "Chorus", "lines": ["Lord of mercy send forth Thy Rod", "revealed from thy sacred page.", "Send forth teachers, Thy church to warn,", "In this sin curse darkened age."]}, {"label": "2", "lines": ["Send them forth, the men of knowledge,", "send them with Thy Shepherd’s Rod", "Send them now to save Thy lost sheep,", "let them teach the truth of God."]}, {"label": "3", "lines": ["Though the mighty three-fold message", "has been sounding all these years", "It finds God’s people fast asleep;", "to the Rod they close their ears."]}]}, {"n": 8, "title": "Two Hundred Million", "caps": "TWO HUNDRED MILLION", "ref": "Rev.9:16", "tune": "We Have An Anchor", "sections": [{"label": "1", "lines": ["One hundred forty-four thousand will dwell;", "In the promised land with Emanuel.", "And their numbers swell as they go and tell,", "then two hundred million workers will excell."]}, {"label": "Chorus", "lines": ["When the Loud Cry message will begin,", "They preach the gospel to all the men;", "Multitudes of the people they will win;", "Two hundred million, calling them from sin."]}, {"label": "2", "lines": ["They’re prepared for an hour, day, month, and year;", "To slay those who snear, those who will not hear.", "But all those who fear, and the Lord revere,", "will be saved and gathered that are all sincere."]}, {"label": "3", "lines": ["When the saints are gathered and none remain;", "And the vile are slain, then the Lord will reign;", "Where there’s no profane, nor the proud and vain,", "to live in the Kingdom of the Lord’s domain."]}]}, {"n": 9, "title": "The Special Resurrection", "caps": "THE SPECIAL RESURRECTION", "ref": "Dan.12:2,3", "tune": "Jesus Comes", "sections": [{"label": "1", "lines": ["In the dust the saints are sleeping;", "Let there be no voice of weeping.", "Though they rest in the Lord’s keeping;", "Waiting for the special reaping."]}, {"label": "Chorus", "lines": ["They shall rise! The call will come.", "In the special resurrection;", "Never more a separation,", "They shall rise! In the kingdom."]}, {"label": "2", "lines": ["Though their frame be of mortal clay;", "Made from dust of death and decay.", "Yet in that resurrection day;", "They will hear His voice and obey;"]}, {"label": "3", "lines": ["With a thunder the ground will quake;", "Dusty beds will tremble and shake.", "Graves will open as the Lord spake;", "When the dead are called to awake."]}]}, {"n": 10, "title": "Sweet Shepherd’s Rod", "caps": "SWEET SHEPHERD’S ROD", "ref": "EZEK. 3:3", "tune": "Sweet by and by", "sections": [{"label": "1", "lines": ["Unto the prophet of Israel;", "There came the Word of Emanuel", "“Go and take the book and eat the roll", "As honey for sweetness to thy soul”."]}, {"label": "Chorus", "lines": ["Oh, how sweet, is the roll", "(Oh, how sweet) (Is the Roll)", "Inspired by the sweet spirit of God", "(Sweet spirit)", "Oh how sweet, to the soul", "(Oh, how sweet) (to the soul)", "Is the message of the Shepherd’s Rod."]}, {"label": "2", "lines": ["It’s the message of the Shepherd’s Rod", "Inspired by the sweet spirit of God", "The kingdom message we love to hear", "Is the Voice of God so sweet and clear."]}, {"label": "3", "lines": ["For the Shepherd’s Rod unrolled the scroll", "It’s the truth found in the golden bowl", "And to ev’ryone that eats this roll", "It becomes sweeter unto the soul."]}]}, {"n": 11, "title": "In His Kingdom", "caps": "IN HIS KINGDOM", "ref": "Isa.2:2", "tune": "Over yonder", "sections": [{"label": "1", "lines": ["When God sets up His Kingdom", "Many nations will say “come", "Let us go up and serve Him", "In the land of Jerusalem.”"]}, {"label": "Chorus", "lines": ["In His kingdom we will lie down in peace", "In His kingdom all our troubles will cease,", "No more sorrow, toil, grief, nor care;", "In His kingdom bright and fair,", "over, over there. (over there)"]}, {"label": "2", "lines": ["When God’s kingdom is restored", "Ev’ryone will serve the Lord", "Nations will come from afar", "No more will they ever learn war."]}, {"label": "3", "lines": ["In the land of Israel;", "In His kingdom we will dwell;", "He will teach us of His ways;", "And forever His name we’ll praise."]}]}, {"n": 12, "title": "Oh Plead With Mother", "caps": "OH PLEAD WITH MOTHER", "ref": "Hosea.2:1,2", "tune": "Throw out the life line", "sections": [{"label": "1", "lines": ["The Lord commands", "to the prophet Jezreel:", "Say unto your brethren with an appeal:", "Go plead with mother", "for she’s not my wife.", "Oh, who will plead with mother to save her life?"]}, {"label": "Chorus", "lines": ["Oh, plead, with mother;", "Sister and Brother", "Tell her about the Shepherd’s Rod;", "Oh, plead, with mother;", "Sister and Brother.", "Is the command of our God."]}, {"label": "2", "lines": ["He’ll not have mercy", "upon her children,", "They are worldly converts conceived in sin.", "She that conceived them", "hath done shamefully", "She follows her lovers for tithe and money"]}, {"label": "3", "lines": ["Ruhamah, sister,", "and Ammi, brother;", "Will you go today and plead with mother?", "Oh, plead, for soon", "the judgement will begin;", "And she will not be sealed nor saved from her sin."]}]}, {"n": 13, "title": "Send The Rod", "caps": "SEND THE ROD", "ref": "Micah 6:9", "tune": "Send the light", "sections": [{"label": "1", "lines": ["There are souls that are ready to be spued out;", "Send the Rod! (Send the Rod) Send the Rod!", "Tell them of the sealing message with a shout;", "Send the Rod! (Send the Rod) Send the Rod!"]}, {"label": "Chorus", "lines": ["Send the Rod!(Send the Rod)", "The blessed Shepherd’s Rod", "Tell it to (Tell it to )the church of God", "Send the Rod!(Send the Rod)", "The blessed Shepherd’s Rod", "Tell it to (Tell it to )the church of God", "(the church of God)"]}, {"label": "2", "lines": ["Let us go to the lost sheep of Israel;", "Send the Rod! (Send the Rod) Send the Rod!", "That they may hear the Voice of Imanuel;", "Send the Rod! (Send the Rod) Send the Rod!"]}, {"label": "3", "lines": ["Oh, let us go to the blind and set them free;", "Send the Rod! (Send the Rod) Send the Rod!", "Give to them the eyesalve that they all may see;", "Send the Rod! (Send the Rod) Send the Rod!"]}]}, {"n": 14, "title": "The Latter Rain", "caps": "THE LATTER RAIN", "ref": "Joel 2:23", "tune": "Farther Along", "sections": [{"label": "1", "lines": ["Oh, let us be glad and sing a refrain;", "Let us rejoice in the Lord our God,", "For the Lord has given the former rain;", "And the latter rain, the Shepherd’s Rod."]}, {"label": "Chorus", "lines": ["The latter rain", "is falling all around;", "Falling upon", "the people of God.", "Will it fall on you", "or upon the ground?", "Oh, will you receive", "the Shepherd’s Rod?"]}, {"label": "2", "lines": ["Ask ye in the time of the latter rain;", "For present truth that you may be sealed.", "And the Lord God will give showers of rain;", "Unto ev’ryone grass in the field."]}, {"label": "3", "lines": ["Those not living up to the former rain;", "Will not recognize the latter rain.", "And in the kingdom they will never reign;", "The angel will pass, they will be slain."]}]}, {"n": 15, "title": "Hear The Shepherd Calling", "caps": "HEAR THE SHEPHERD CALLING", "ref": "MIC.6:9", "tune": "Love divine", "sections": [{"label": "1", "lines": ["Do you hear the Shepherd calling", "Message of the Shepherd’s Rod?", "‘Tis the Voice of Jesus falling", "On the sleeping saints of God."]}, {"label": "Chorus", "lines": ["See the brightness", "of the dawning,", "of the great and glorious day.", "When the saints", "of God are shouting", "Halelujah all the way!"]}, {"label": "2", "lines": ["Are you watching, are you ready?", "For the great and dreadful day?", "Are your sins all on the altar,", "Are your idols cast away?"]}, {"label": "3", "lines": ["Keep your eyes upon the message,", "message of the Shepherd’s Rod.", "Living bread sent down from heaven,", "flaming with the pow’r of God."]}]}, {"n": 16, "title": "Lord I Want To Be in That Kingdom", "caps": "LORD I WANT BE IN THAT KINGDOM", "ref": "Daniel 2:44", "tune": "When the saints go marching in", "sections": [{"label": "1", "lines": ["Soon the sealing will be over;", "Have you over come your sin", "Are you ready for God’s kingdom", "When the saints go marching in."]}, {"label": "Chorus", "lines": ["When the saints (when the saints)", "Go marching in, (marching in)", "To the kingdom without sin.", "Lord I want to be in that kingdom,", "when the saints go marching in."]}, {"label": "2", "lines": ["Will you tell of the ROD message?", "Will you save the church from sin?", "Tell the good news of the kingdom,", "When the saints go marching in."]}, {"label": "3", "lines": ["Will you go to all the nations,", "When the Loud Cry will begin?", "Will you bring them to God’s kingdom?", "When the saints go marching in."]}]}, {"n": 17, "title": "Throne Of His Glory", "caps": "THRONE OF HIS GLORY", "ref": "Matt.25:31-34", "tune": "Higher Ground", "sections": [{"label": "1", "lines": ["Upon His throne Jesus will come;", "His throne of glory the kingdom.", "He sets the sheep on His right Hand;", "They will dwell in the glory land.", "(Refrain)", "Fear God and give glory to Him;", "His glory in Jerusalem.", "Upon His throne the Lord will come;", "The throne of glory, His kingdom."]}, {"label": "2", "lines": ["The nations He will separate,", "And the righteous He will translate.", "He sets the goats on His left Hand,", "They will not obey His command."]}, {"label": "3", "lines": ["The earth is lightened with glory;", "The kingdom truth for all to see.", "It’s the message of the loud cry,", "And the Lord it will glorify."]}]}, {"n": 18, "title": "The Shaking", "caps": "THE SHAKING", "ref": "Ew.p.270", "tune": "The cleansing wave", "sections": [{"label": "1", "lines": ["In fifty-five Elijah died", "And many went astray.", "The shaking they could not abide", "The price they would not pay."]}, {"label": "Chorus", "lines": ["The Lord will shake", "and sift us all", "Oh, will you stand", "or will you fall?", "Stand with the ROD", "what e’re the cost", "Lest thou be", "shaken out and lost."]}, {"label": "2", "lines": ["In fifty-nine the leaders lied", "The ROD they did betray.", "Elijah’s message they denied", "For they would not obey."]}, {"label": "3", "lines": ["The Shepherd’s", "Rod must be our guide", "Trust not in mortal clay.", "May all Davidians decide", "To trust the ROD always."]}]}, {"n": 19, "title": "Praise Ye Our God", "caps": "PRAISE YE OUR GOD", "ref": "Micah 6:9", "tune": "Jesus Loves Even Me", "sections": [{"label": "1", "lines": ["Praise be to our God", "in heaven above", "He sent the ROD", "in His infinite love", "And saving truths", "in the Bible revealed;", "Prophecies fulfilled", "and others unsealed."]}, {"label": "Chorus", "lines": ["Oh, I praise God", "the ROD doth restore", "unto life new;", "all things of yore.", "Thy kingdom come;", "Oh, naught can compare.", "Sacrifice all be there."]}, {"label": "2", "lines": ["Oh, I praise God", "that the ROD did arrive", "It came to reform us and to revive", "From sad deception", "in faith and in works", "Wherein the sirens", "of death ever lurks."]}, {"label": "3", "lines": ["If we would stand when", "the angel doth slay", "We’ll sigh now, cry now,", "and learn to obey", "Thus first fruits cleansed", "by the pow’r of the ROD", "We’ll win the multitude,", "praise ye our God."]}]}, {"n": 20, "title": "Who Will Enter The Land?", "caps": "WHO WILL ENTER THE LAND?", "ref": "Isaiah 31:7-8", "tune": "Never part again", "sections": [{"label": "1", "lines": ["Soon the nations and churches will unite;", "To fortify their strength and might.", "In the time of war we will take our flight;", "And go to the land of delight."]}, {"label": "Chorus", "lines": ["We are traveling through Assyria’s land,", "on our way unto Emanuel’s land;", "To the kingdom set by the Lord’s command;", "God’s kingdom in the holy land.", "Who? Will enter the land?", "They are only the sealed ones!", "Who? The Davidians!", "One hundred forty-four thousand;", "They are those saved", "by the Lord’s mighty hand,", "And on Mt. Zion they will stand."]}, {"label": "2", "lines": ["Let everyone cast his Idols away;", "We dare not trust in mortal clay.", "Only those who hear the Rod and obey;", "Will travel on the Lord’s highway."]}, {"label": "3", "lines": ["When Assyria falls and we are made free;", "Delivered from the death decree.", "Nevermore to be in captivity,", "Sealed and saved for eternity."]}]}, {"n": 21, "title": "Crossing The Red Sea", "caps": "CROSSING THE RED SEA", "ref": "Isa.11:18", "tune": "The Old fashioned meeting", "sections": [{"label": "1", "lines": ["As in the days of Moses", "when they cross the Red Sea;", "And he lifted up his rod", "and set God’s people free,", "In the last days we’ll be saved", "by the Shepherd’s Rod;", "And we’ll cross the Red Sea", "in the chariots of God."]}, {"label": "Chorus", "lines": ["Are you ready to board", "the chariot of the Lord?", "When the angels will cry out", "to the saints “all aboard”", "We will cross the Red Sea", "and go over dry shod;", "In a flying saucer", "to the Kingdom of our God."]}, {"label": "2", "lines": ["When the Lord comes with", "the angels in chariots of fire;", "To deliver His people,", "He will be their desire", "And the wicked without", "the seal He will destroy;", "But He’ll take the saints home", "with a celestial convoy."]}, {"label": "3", "lines": ["Two hundred million gospel workers", "sound the Loud Cry", "Oh “come out of her my people”", "will they prophesy,", "and the sweet chariot", "will swing low from on high;", "To the kingdom in chariots of the Lord they’ll fly."]}]}, {"n": 22, "title": "The Loud Cry", "caps": "THE LOUD CRY", "ref": "Rev. 18:1-4", "tune": "Life’s railroad to heaven", "sections": [{"label": "1", "lines": ["Soon the sealing will be over", "Soon the saints will all be sealed.", "Then the Lord will send the first fruits", "Into the great harvest field.", "He will send them to the nations", "They will gather many men.", "Who will serve the Lord forever", "When the Loud Cry will begin."]}, {"label": "Chorus", "lines": ["“Oh come out of her my people;", "nor partake of her great sin.", "Is the message we will tell them;", "When the Loud Cry will begin."]}, {"label": "2", "lines": ["When the image beast is set up", "When the four winds are to blow.", "God will send us to the nations", "To the isles afar we’ll go.", "We will tell them of the Kingdom;", "And many will go there-in.", "We’ll tell them of the third angel", "When the Loud Cry will begin."]}, {"label": "3", "lines": ["When the beast speaks like a dragon", "There will be a death decree.", "And the saints ready to perish;", "We will save and set them free.", "And to the Lord’s holy mountain;", "A great multitude we’ll win’", "To Jerusalem we’ll bring them;", "When the Loud Cry will begin."]}]}, {"n": 23, "title": "Out Of God’s Word", "caps": "OUT OF GOD’S WORD", "ref": "Micah 6:9", "tune": "Back of the clouds", "sections": [{"label": "1", "lines": ["Never fear though false doctrines", "around your path may fall;", "Do not doubt the Word of our God.", "Through his Holy Spirit", "He will lead us one and all;", "He will guide us by the Rod."]}, {"label": "Chorus", "lines": ["Out of God’s Word truth", "will always be shining;", "do not doubt God,", "His Rod will be found true.", "One hundred forty-four", "thousand He will bring;", "They’re in His church", "just waiting to shine through."]}, {"label": "2", "lines": ["Jacob’s long and hard journey", "is almost to an end;", "Many have the Rod forsaken.", "Through the years of trials", "only God is our true friend;", "He knows who will be shaken"]}, {"label": "3", "lines": ["From his throne in heaven", "God is calling one and all;", "Many have the seal not taken;", "Through the message of the Shepherd’s Rod", "is God’s last call;", "Pray none will be forsaken."]}]}, {"n": 24, "title": "Elijah The Prophet", "caps": "ELIJAH THE PROPHET", "ref": "Malachi. 4:5;  TM. 475", "tune": "I know who holds tomorrow", "sections": [{"label": "1", "lines": ["Behold I will send Elijah", "with the message of the hour.", "And he will be the last prophet;", "someone in the spirit and pow’r.", "He will interpret the Scriptures;", "He will reveal prophecies.", "And he comes to restore all things", "For he has the kingdom keys."]}, {"label": "Chorus", "lines": ["When he comes to bring the message;", "He will teach the Shepherd’s Rod.", "And the saints will know who sent him", "They will know the voice of God."]}, {"label": "2", "lines": ["He will prepare the Lord’s coming", "of the great and dreadful day.", "A great day for all God’s people", "Who will hear truth and obey.", "A dreadful day for the wicked", "They’ll not hear the Voice of God.", "Whose Voice cries unto the city", "When He says: “Hear ye the Rod”"]}, {"label": "3", "lines": ["In the teachings of Elijah", "There can only be safety", "For there will be no other voice", "Of truth and authority;", "All other voices will lead you", "To trust in the mortal clay.", "They will lead you to perdition", "From the path they’ll lead astray."]}]}, {"n": 25, "title": "Seal Me is My Cry", "caps": "SEAL ME IS MY CRY", "ref": "Ezekiel 9:4-5", "tune": "Pass me not", "sections": [{"label": "1", "lines": ["Pass me not,", "O sealing angel.", "Here my humble cry.", "Deliver me from", "death and hell;", "Do not let me die,"]}, {"label": "Chorus", "lines": ["Seal me is my cry,", "God’s seal from on high;", "For without the seal I must die;", "Do not pass me by."]}, {"label": "2", "lines": ["Pass me not,", "O sealing angel.", "Seal and sanctify.", "Seal me from all", "those who rebel;", "Do not let me die."]}, {"label": "3", "lines": ["Pass me not,", "O sealing angel,", "Who will purify.", "In the kingdom", "I want to dwell;", "Do not let me die."]}]}, {"n": 26, "title": "Hear The Rod, Voice Of God", "caps": "HEAR THE ROD, VOICE OF GOD", "ref": "Mic.6:9", "tune": "Jesus Saves", "sections": [{"label": "1", "lines": ["We have heard the joyful sound,", "Hear the ROD, Voice of God.", "Spread good tidings all around;", "Hear the ROD, Voice of God.", "Bear the news unto God’s church;", "Let them hear the Shepherd’s Rod.", "For the truth, O let them search;", "Hear the ROD, voice of God."]}, {"label": "2", "lines": ["Let us go to Israel,", "Hear the ROD, Voice of God.", "With a message we must tell;", "Hear the ROD, Voice of God.", "Seal thy people we will pray;", "Let them hear the Shepherd’s Rod.", "Lest the angel comes to slay;", "Hear the ROD, voice of God."]}, {"label": "3", "lines": ["If they hear Emanuel,", "Hear the ROD, Voice of God.", "In the kingdom they will dwell;", "Hear the ROD, Voice of God.", "To nations they prophesy;", "Let them hear the Shepherd’s ROD.", "When they proclaim the Loud Cry;", "Hear the ROD, Voice of God."]}]}, {"n": 27, "title": "Elijah Turn The Heart", "caps": "ELIJAH TURNS THE HEARTS", "ref": "Malachi 4:6", "tune": "The King's business", "sections": [{"label": "1", "lines": ["When Elijah comes with", "the message from above;", "With the message of truth", "of mercy and of love.", "He’ll turn hearts of son", "and father to each other", "He’ll turn the daughter to mother."]}, {"label": "Chorus", "lines": ["Oh, turn your hearts", "to your children;", "Pray they will", "turn away from sin.", "Oh, let us turn our hearts", "of love to each other;", "Father, mother, sister, brother."]}, {"label": "2", "lines": ["Elijah comes before", "the great and dreadful day;", "He will revive a love for", "those who’ve gone astray", "With hearts of love unto each", "other they will pray", "“Seal them before the angel’s slay.”"]}, {"label": "3", "lines": ["Oh, turn your hearts unto", "children you give to birth", "For they are your children", "born of delight and mirth", "And if your heart is not turn", "to them as of worth", "The Lord will come and smite the earth."]}]}, {"n": 28, "title": "The Seven Women", "caps": "THE SEVEN WOMEN", "ref": "Isaiah 4:1-4", "tune": "He comes with clouds descending", "sections": [{"label": "1", "lines": ["And in that day seven women", "All the churches of our day;", "Eat their bread, the doctrines of men", "While they’re professing to obey.", "They take hold of the man Jesus", "While they say “God is with us.”"]}, {"label": "2", "lines": ["They want to be called by My name", "To take away their reproach;", "While they are living in their shame,", "Unto the Father they approach.", "They wear the apparel of men.", "Their own righteousness of sin"]}, {"label": "3", "lines": ["And then the Lord will wash away,", "All the sin and filthiness.", "Of the daughters who will obey,", "He covers with His righteousness,", "And in the kingdom they will dwell", "The escaped of Israel."]}]}, {"n": 29, "title": "The Sealing Angel", "caps": "THE SEALING ANGEL", "ref": "Rev.7:2-4", "tune": "Leaning on the everlasting arms", "sections": [{"label": "1", "lines": ["John saw the angel coming from the east,", "Having the seal of the living God.", "And he comes before the great image beast,", "With the message of the Shepherd’s Rod."]}, {"label": "Chorus", "lines": ["Sealing, Sealing", "Sealing of our God , With the Shepherd’s Rod", "The Lord’s angel with the seal of God.", "Sealing, Sealing,", "Sealing of our God , With the Shepherd’s Rod", "Sealing all them with the Shepherd’s Rod."]}, {"label": "2", "lines": ["And the angel will cry with a loud voice;", "Hurt not till we’ve sealed the saints of God.", "Do not hurt the earth till each makes a choice;", "That all may hear of the Shepherd’s Rod."]}, {"label": "3", "lines": ["John heard the number of the servants sealed,", "Who hear and obey the voice of God.", "Each one will be saved, each one will be healed.", "And delivered by the Shepherd’s Rod."]}]}, {"n": 30, "title": "When He Give Us A New Heart", "caps": "WHEN HE GIVE US A NEW HEART", "ref": "Ezekiel 36:24-28", "tune": "Where could I go?", "sections": [{"label": "1", "lines": ["When the Lord will", "take us from the heathen,", "To sanctify His Holy Name.", "Then He will give to", "the saints a new heart,", "To everyone that overcame."]}, {"label": "Chorus", "lines": ["For He will take away", "our stoney hearts,", "And a new spirit He’ll impart.", "Oh, what a wonderful", "day that will be,", "When He gives", "to us a new heart."]}, {"label": "2", "lines": ["He will sprinkle", "clean water upon us,", "To cleanse us from our filthiness.", "He will take away", "all our stoney hearts,", "And with His spirit He will bless."]}, {"label": "3", "lines": ["We will dwell in the", "land of our fathers.", "In the land of Jerusalem.", "Then we will keep", "His statues and judgments,", "In the kingdom we will do them."]}]}, {"n": 31, "title": "Behold The Kingdom", "caps": "BEHOLD THE KINGDOM", "ref": "Isaiah 62:2", "tune": "Beyond the sunset", "sections": [{"label": "1", "lines": ["Behold the Kingdom,", "Set up by the Lord.", "A Kingdom once lost,", "will be restored.", "A Kingdom of saints,", "all of one accord.", "A Kingdom of peace,", "His name adored."]}, {"label": "2", "lines": ["Behold the kingdom,", "Saints ever longing.", "To be with the Lord,", "ever dwelling.", "They shall seek the Lord,", "and David their king.", "As in days of old,", "There shall they sing."]}, {"label": "3", "lines": ["Behold the Kingdom,", "For ever to stand.", "Where the Saints will dwell,", "in their own land.", "Israel’s children,", "numbered as the sand.", "Called forth by His pow’r,", "Saved by His hand."]}, {"label": "4", "lines": ["Behold the kingdom,", "A beautiful gem,", "A crown of glory,", "a diadem.", "The land of Zion,", "where all worship Him.", "God’s holy mountain, Jerusalem."]}]}, {"n": 32, "title": "God is With Us", "caps": "GOD IS WITH US", "ref": "Isa.8:9-14", "tune": "Jesus is Coming Again", "sections": [{"label": "1", "lines": ["Oh, fear not their fear,", "the Lord He is near;", "We know that God is with us.", "Let none be afraid,", "Let all hearts be stayed;", "We know that God is with us."]}, {"label": "Chorus", "lines": ["God is with Us,", "Our Lord Jesus", "Fear not for God is with us."]}, {"label": "2", "lines": ["When they speak the Word,", "Their voice is not heard,", "We know that God is with us.", "They give their command,", "and it shall not stand,", "We know that God is with us."]}, {"label": "3", "lines": ["Do not federate nor associate", "We know that God is with us.", "Walk not in their way,", "nor hear and obey;", "We know that God is with us."]}]}, {"n": 33, "title": "Cleansing Fountain", "caps": "CLEANSING FOUNTAIN", "ref": "Zech.13:1", "tune": "Near to the Heart of God", "sections": [{"label": "1", "lines": ["There will be a cleansing fountain,", "For all unrighteousness.", "Opened in God’s Holy Mountain,", "For sin and uncleanliness."]}, {"label": "Chorus", "lines": ["There’ll be opened a fountain,", "To the house of David.", "In the Lord’s holy mountain,", "There all our sins are hid."]}, {"label": "2", "lines": ["And God will cleanse us from our sin;", "From all our filthiness.", "He will cover all faithful men,", "With his own righteousness."]}, {"label": "3", "lines": ["The righteous are cleansed in the land,", "Those only who serve Him.", "They seek to obey His command,", "Those in Jerusalem."]}]}, {"n": 34, "title": "Death Shall Flee", "caps": "DEATH SHALL FLEE", "ref": "Rev.9:6", "tune": "Walk by faith", "sections": [{"label": "1", "lines": ["When the time of trouble will come,", "Before God sets up his Kingdom.", "There will be no earthly power,", "For saints to trust in that dark hour."]}, {"label": "Chorus", "lines": ["For the saints will desire to die,", "When they preach truth and prophesy.", "Against the sins they sigh and cry,", "And the death decree they defy."]}, {"label": "2", "lines": ["For there will be a death decree,", "From the men in authority.", "That if the saints will dare defy,", "Will be declared worthy to die."]}, {"label": "3", "lines": ["The saints who keep the seventh day,", "Will trust in God, not mortal clay.", "And when the death decree will come,", "He will save them in His Kingdom."]}]}, {"n": 35, "title": "The Shepherd’s Rod", "caps": "THE SHEPHERD’S ROD", "ref": "Micah 6:9", "tune": "Ask not to be excused", "sections": [{"label": "1", "lines": ["Hear ye the Shepherd’s Rod,", "T’was sent in love from God,", "From Heaven came a Voice,", "That made us all rejoice.", "A message of good news,", "And may no one refuse,", "To hear the truth from God,", "His precious Shepherd’s Rod."]}, {"label": "Chorus", "lines": ["Come oh, come,", "the Shepherd’s Rod is here.", "Come, oh, come", "rejoice in happy cheer,", "Oh, Zion rise and shine,", "Arise and fall in line,", "Is reformation sign;", "The Shepherd’s Rod divine."]}, {"label": "2", "lines": ["His promise ever more,", "The Kingdom to restore,", "Oh, may we soon go home,", "No more the world to roam.", "We long for that sweet rest,", "Where all the saints are blest;", "Where righteousness will reign;", "All glory to His name."]}, {"label": "3", "lines": ["Redemption’s song we’ll sing,", "And make salvation ring;", "For in the Promise Land,", "On Mt. Zion we’ll stand,", "With our sins washed away,", "Oh, happy golden day", "So praise be to our God", "He sent the Shepherd’s Rod."]}]}, {"n": 36, "title": "The Book Of Revelation", "caps": "THE BOOK OF REVELATION", "ref": "REV.1:1,2", "tune": "Just a Little Talk With Jesus", "sections": [{"label": "1", "lines": ["The Lord gave to Jesus all the Revelation;", "The Word of the Lord for the saints meditation.", "And when we read it we’re filled with adoration;", "The Revelation, worthy of admiration."]}, {"label": "Chorus", "lines": ["There is the prophecy", "of the seven seals;", "With the number of the saints It reveals.", "And the angel from the east;", "Who seals before the image beast.", "There is the time of the Loud Cry to begin;", "There’s a multitude to save and bring in;", "And there’s many more prophecies to be found", "therein. Are found Therein"]}, {"label": "2", "lines": ["And in the book of truth of the Revelation;", "The Word of the Lord for the saints’ preservation.", "He sent the Shepherd’s Rod for our preparation;", "The Revelation, of the great reformation."]}, {"label": "3", "lines": ["Blessed be they that hear all the Revelation;", "The Word of the Lord for the saints’ information.", "For it reveals the truth of the separation;", "The Revelation of the saints for translation."]}]}, {"n": 37, "title": "David Their King", "caps": "DAVID THEIR KING", "ref": "EZEKIEL 34:23,24", "tune": "Nothing Between", "sections": [{"label": "1", "lines": ["In the last days", "the saints will be seeking,", "The Lord their God", "and David their king.", "God will set up", "as promised in the Word,", "His servant David, the one Shepherd."]}, {"label": "Chorus", "lines": ["Now is your chance", "to feast on the Lord’s Word.", "At the hand of God’s chosen shepherd.", "Oh, let us hear and obey", "the voice of God.", "Let us feast upon the Shepherd’s Rod."]}, {"label": "2", "lines": ["The Lord will seal", "everyone that serves him,", "And David will be king over them.", "For God will bring", "them into their own land;", "One hundred and forty-four thousand"]}, {"label": "3", "lines": ["And the Vanguard", "who are Davidians,", "They are the true and faithful ones.", "They shall come forth", "with the first fruit army;", "And then the reign of David will be."]}]}, {"n": 38, "title": "Beautiful Message", "caps": "BEAUTIFUL MESSAGE", "ref": "Nahum 1:15", "tune": "", "sections": [{"label": "1", "lines": ["Beautiful upon the mountains;", "Feet of him bringing glad tidings;", "Tidings of peace and joy and love;", "Beautiful message from above!"]}, {"label": "Chorus", "lines": ["Hear ye the Rod!", "Hear ye the Rod!", "Beautiful message", "Sent from God!"]}, {"label": "2", "lines": ["Back to the land of our fathers;", "Israel travels in glory;", "There to be cleansed from sin and shame;", "I am so glad the message came!"]}, {"label": "3", "lines": ["Give us Thy mercy, O Father;", "Help us to watch for Thy coming;", "Grant that we never cease to pray;", "Thus to be ready ev’ry day!"]}]}, {"n": 39, "title": "The Ten Virgins", "caps": "THE TEN VIRGINS", "ref": "MATT.25:1-13", "tune": "Father, we come to thee", "sections": [{"label": "1", "lines": ["Ten virgins, five are wise,", "The ROD opened their eyes;", "At midnight they arise, To meet the Lord.", "Ten virgins, foolish five,", "Did not care to revive;", "Too late they did arrive,", "To meet the Lord."]}, {"label": "Chorus", "lines": ["Do you have extra oil", "The SHEPHERD’S ROD", "To it be true and loy’l,", "The Voice of God."]}, {"label": "2", "lines": ["The bridegroom comes, behold;", "Are your lamps out and cold?", "Go where the oil is sold, Foolish virgins.", "Too late they go to buy,", "They will not sigh and cry;", "Without the oil they die; Foolish virgins."]}, {"label": "3", "lines": ["“Lord, Lord, open the door”", "Foolish virgins implore,", "My ROD you do abhor;", "Foolish virgins,", "I know you not, depart,", "Truth is not in your heart;", "It’s too late to impart;", "Foolish virgins.”"]}]}, {"n": 40, "title": "Who Comes From Edom?", "caps": "WHO COMES FROM EDOM?", "ref": "Isaiah 43:1-4", "tune": "Oh Zion Haste", "sections": [{"label": "1", "lines": ["Who will come from", "all the wicked in Edom?", "In the Lord’s house,", "from Bozrah He will come;", "Then He will slay those", "that have not overcome;", "And will not save them", "for the Lord’s kingdom."]}, {"label": "Chorus", "lines": ["When the year of", "His redeemed is come;", "He will slay the wicked", "and set up His kingdom."]}, {"label": "2", "lines": ["Who is it that comes", "to stain His garments red?", "In His anger,", "the wicked He will tread;", "And require of them", "their blood which He will shed;", "To defile the house, filing it with dead."]}, {"label": "3", "lines": ["Mighty to save,", "the Lord speaks in righteousness", "And He will spare", "the saints who will confess;", "Then the kingdom", "they will forever possess;", "For He will slay", "the wicked who transgress."]}]}, {"n": 41, "title": "Will You Escape", "caps": "WILL YOU ESCAPE", "ref": "ISAIAH 66:15-19", "tune": "Then Jesus Came", "sections": [{"label": "1", "lines": ["Behold, the Lord comes", "with fire and sword to plead;", "For those who think there", "is nothing they need.", "And then the slain of the Lord", "shall be many;", "But He will spare", "the saints and set them free."]}, {"label": "Chorus", "lines": ["Will you escape from", "the slaughter of the sword?", "Will you declare", "the glory of the Lord?", "Will you invite all", "your brethren to come?", "Will you bring them", "to God’s holy kingdom?"]}, {"label": "2", "lines": ["For the Lord will send those", "that escape the sword;", "To ev’ry nation that will hear the Lord.", "And He will send them", "afar off to the isles;", "To tell of His glory to the Gentiles."]}, {"label": "3", "lines": ["And the one hundred", "and forty-four thousand;", "Will bring their brethren", "to the Promised Land.", "For they will bring ev’ryone", "that will serve Him;", "To His holy mountain Jerusalem."]}]}, {"n": 42, "title": "Not By Might Nor By Power", "caps": "NOT BY MIGHT NOR BY POWER", "ref": "ZECH.4:6", "tune": "He lifted me", "sections": [{"label": "1", "lines": ["Victory is not in the sword;", "Nor to those who trust in their might;", "But to those who trust in the Lord;", "Those who walk in His light.", "(Walk in His Light)"]}, {"label": "Chorus", "lines": ["This is the word of the Lord God;", "Who sent to us the Shepherd’s Rod;", "“Not by might, nor pow’r of the sword;", "But by my Spirit” saith the Lord."]}, {"label": "2", "lines": ["You cannot overcome your sin;", "By trusting in your own power;", "But Jesus will help those to win;", "Who seeks truth of the hour.", "(truth of the hour)"]}, {"label": "3", "lines": ["Now the Lord sent the Shepherd’s Rod;", "All overcomers will hear it;", "For it is the voice of our God;", "Revealed by His Spirit.", "(by His Spirit)"]}]}, {"n": 43, "title": "Rouse Then Hunters", "caps": "ROUSE THEN HUNTERS", "ref": "", "tune": "Sound the battle cry", "sections": [{"label": "1", "lines": ["Sound the battle cry!", "Conference men are shy;", "Dreadful is the day of the Lord;", "Hear the voice of God,", "Speaking through His Rod;", "Wise will humbly tremble at His Word."]}, {"label": "Chorus", "lines": ["Rouse then hunters!", "Search the hills and mountains,", "find the true sheep;", "give the blazing light.", "Fragile barriers of the mighty Esaus,", "crumble quickly in the Jacobs sight."]}, {"label": "2", "lines": ["Times so fugitive,", "Haste God’s truth to give;", "Coals of Pentecost soon will fall", "Zion’s sinners fear;", "Achor’s Valley’s near", "soon they’ll end up very much like Saul."]}, {"label": "3", "lines": ["Davidians one and all,", "Urgent is the calls", "Gideons you must be for the Lord;", "Midianitish tents;", "Are all now hell-bent;", "Quickly rescue Zion in your search."]}]}, {"n": 44, "title": "Hear Ye The Rod", "caps": "HEAR YE THE ROD", "ref": "Micah 6:9", "tune": "All the Way my Savior leads me", "sections": [{"label": "1", "lines": ["Hear the Rod, the savior crieth,", "hear it speak the words of truth.", "Feed his flock with bread from Heaven,", "give to all the old and youth.", "In his love he hath appointed,", "and the wise shall see thy name.", "Justly do and loving, mercy", "humbly by his side remain.- 2X"]}, {"label": "2", "lines": ["In the past the Savior promised,", "to his people Israel.", "He would cause them to pass under,", "with his Rod their number tell.", "He would bring them out and try them,", "purging out all that rebel.", "With his own a cov’nant binding,", "praise his name His goodness tell.- 2X"]}, {"label": "3", "lines": ["Hear the Rod tis He that speaketh,", "guiding straight and true the way.", "Testing all His will obeying,", "naught but love can e’er repay.", "For the wonders of the kingdom,", "glories that outshine the sun.", "Yield your will, his will obeying", "and the ROD shall lead you home.- 2X"]}]}, {"n": 45, "title": "There’s Pow’r in The Rod", "caps": "THERE’S POW’R IN THE ROD", "ref": "E.W 277", "tune": "There Is Power In The Blood", "sections": [{"label": "1", "lines": ["An angel comes", "with the truth of the hour;", "There’s pow’r in the Rod;", "Pow’r in the ROD.", "To give the third angel", "force and the pow’r;", "There’s wonderful pow’r in the Rod."]}, {"label": "Chorus", "lines": ["There is pow’r, pow’r,", "wonder working pow’r,", "in the Truth, of the Rod.", "There is pow’r, pow’r,", "wonder working pow’r,", "in the message", "sent from our God."]}, {"label": "2", "lines": ["In the last work", "on earth He will unite;", "There’s pow’r in the Rod;", "Pow’r in the ROD.", "To give the third angel", "pow’r and the might;", "There’s wonderful pow’r in the Rod."]}, {"label": "3", "lines": ["When this additional", "message will come;", "There’s pow’r in the Rod;", "Pow’r in the ROD.", "It will reveal the truth", "of God’s kingdom;", "There’s wonderful pow’r in the Rod."]}]}, {"n": 46, "title": "As in Time Of Old", "caps": "AS IN TIME OF OLD", "ref": "Micah 6:5", "tune": "A Shelter In The Time Of Storm", "sections": [{"label": "1", "lines": ["The Rod our guide in it we see;", "A power as in time of old.", "Triumph in whatever may be;", "A power as in time of old."]}, {"label": "Chorus", "lines": ["Oh, the mighty Rod", "way down in Egypt’s land;", "Dried the sea", "while in Moses hand,", "It brought forth the water", "in the desert land;", "And took them", "to the Promised Land."]}, {"label": "2", "lines": ["The Rod our guide for us today;", "A power as in time of old.", "Fear not whatever men may say;", "A power as in time of old."]}, {"label": "3", "lines": ["The Shepherd’s Rod is good today;", "Will save us as in time of old.", "Both Lamb and sheep who ever stray;", "Will find us as in time of old."]}]}, {"n": 47, "title": "The Glory Land", "caps": "THE GLORY LAND", "ref": "DAN 2:44", "tune": "The Way Is Long And Weary", "sections": [{"label": "1", "lines": ["Many years the children", "of Isr’el have been away from home;", "It’s not far to Canaan’s land,", "it’s far to Canaan’s land.", "And the Lord has promised that", "they will no longer ever roam;", "It’ not far, it’s not far to Canaan’s land."]}, {"label": "Chorus", "lines": ["The Lord’s kingdom,", "soon it will come;", "with a mighty hand,", "He will command,", "and rule the pleasant land.", "The Lord’s kingdom,", "yes it will come;", "Promised Land, Holy land, the Glory land."]}, {"label": "2", "lines": ["He will gather all His people", "ev’ry where from land and sea", "It’s not far to Canaan’s land,", "it’s far to Canaan’s land.", "He will break the yoke from off", "their neck and they shall be made free;", "It’s not far, it’s not far to Canaan’s land."]}, {"label": "3", "lines": ["For the nations will gather", "from north and south and east and west;", "It’s not far to Canaan’s land,", "it’s not far to Canaan’s land.", "And from ev’rywhere the people", "will come forever to rest;", "It’s not far, It’s not far to Canaan’s land."]}]}, {"n": 48, "title": "Who Can Learn The Song", "caps": "WHO CAN LEARN THE SONG", "ref": "REV. 14:1-3", "tune": "The Glory Song", "sections": [{"label": "1", "lines": ["Upon the Mt. Zion", "a Lamb will stand;", "With Him the first fruits", "in the Promised Land.", "They are sealed and saved", "by His mighty hand;", "The one hundred", "and forty four thousand."]}, {"label": "Chorus", "lines": ["When angels sing", "unto the king,", "Before the throne,", "a song unknown;", "They are the only ones", "to learn that song;", "They follow the Lamb,", "to Him they belong."]}, {"label": "2", "lines": ["And in their foreheads", "is the Father’s name;", "For they are without fault", "and without shame.", "In the strength of Jesus", "they overcame;", "The one hundred", "and forty-four thousand."]}, {"label": "3", "lines": ["They follow the Lamb", "wherever He goes;", "They are the first fruits,", "the ones the Lord chose.", "In their mouth is no guile", "for they are those;", "The one hundred and forty-four thousand."]}]}, {"n": 49, "title": "Shall We Gather in The Kingdom", "caps": "SHALL WE GATHER IN THE KINGDOM", "ref": "Isa. 11:11,12", "tune": "Shall we gather in the Kingdom", "sections": [{"label": "1", "lines": ["Shall we gather in the kingdom,", "Where God’s ancient people trod?", "And return to home forever,", "There to seek the Lord our God."]}, {"label": "Chorus", "lines": ["Yes, we’ll gather", "in the kingdom,", "The beautiful,", "the beautiful kingdom;", "Gather with the saints", "in kingdom,", "In holy Jerusalem."]}, {"label": "2", "lines": ["E’re we reach the coming kingdom,", "In peace ever to abide;", "We must live the judgment message,", "Laying all our sins aside."]}, {"label": "3", "lines": ["When we reach the blessed kingdom,", "Holy servants for the Lamb;", "To the nations we will carry,", "The Word of the great I am."]}]}, {"n": 50, "title": "This is the Shepherd’s Rod", "caps": "THIS IS THE SHEPHERD’S ROD", "ref": "", "tune": "This is my Father’s world", "sections": [{"label": "1", "lines": ["This is the Shepherd’s Rod,", "and to my yearning heart,", "The Bible brings such precious things", "as only truth can impart.", "This is the Shepherd’s Rod;", "By God’s word I am taught", "From sin be free, and live eternally,", "By the Rod truth was brought."]}, {"label": "2", "lines": ["This is the Shepherd’s Rod,", "from our glad hearts we praise;", "The morning light, the truth so bright,", "given for these latter days,", "This is the Shepherd’s Rod;", "It shines in all that’s fair;", "In the word of truth I find more proof,", "It speaks to me everywhere."]}, {"label": "3", "lines": ["This is the Shepherd’s Rod", "O let me ne’er forget", "That though the wrong seems oft so strong", "God’s Rod is stronger yet.", "This is the Shepherd’s Rod;", "why should my heart be sad?", "The Rod is dear; let the people hear!", "And Davidia be glad."]}]}, {"n": 51, "title": "Come ye thankful people", "caps": "COME, YE THANKFUL PEOPLE", "ref": "Matt.13", "tune": "Sweet by and by", "sections": [{"label": "1", "lines": ["Come ye thankful, people come,", "Raise the song of harvest home", "All is safely gathered in,", "‘Ere the winter storms begin", "God our Maker doth provide", "For our wants to be supplied.", "Come to God’s own temple, come;", "Raise the song of harvest home."]}, {"label": "2", "lines": ["We ourselves are God’s own field,", "Fruits unto His praise to yield;", "Wheat and tares together sown,", "unto joy or sorrow grown:", "First the blade and then the ear,", "then the full corn shall appear;", "Grant, O, harvest Lord, that we", "wholesome grain and pure may be."]}, {"label": "3", "lines": ["For the Lord our God shall come,", "And shall take His harvest home;", "From His field shall purge away", "all that doth offend that day:", "Give His angels charge at last", "in the fire the tares to cast,", "But the fruitful ears to store,", "in His garner evermore."]}, {"label": "4", "lines": ["Then, thou church triumphant come,", "Raise the song of Harvest home;", "All are safely gathered in,", "Free from sorrow, free from sin;", "There forever purified in God’s presence to abide;", "Come ten thousand angels come", "Raise the glorious harvest home!"]}]}];
 
@@ -314,14 +497,37 @@ const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
   .replace(/[’‘']/g, '').replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
 // Sort key for A to Z: ignore a leading "The"/"A" so "The Shaking" files under S
 const sortKey = t => norm(t).replace(/^(the|a|an) /, '');
-SONGS.forEach(s => { s.key = norm(s.title + ' ' + s.caps); });
+SONGS.forEach(s => {
+  s.key = norm(s.title + ' ' + s.caps);
+  s.lyricLines = s.sections.flatMap(sec => sec.lines.map(l => ({ raw: l, n: norm(l) })));
+  s.lyricKey = s.lyricLines.map(l => l.n).join(' ');
+});
+const song = n => SONGS[n - 1];
 
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch { return null; } },
   set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  json(k, fallback) { try { return JSON.parse(localStorage.getItem(k)) ?? fallback; } catch { return fallback; } },
 };
-const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const transition = fn => (document.startViewTransition && !reduceMotion) ? document.startViewTransition(fn) : fn();
+let toastTimer;
+function toast(msg) {
+  $('toast').textContent = msg; $('toast').hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { $('toast').hidden = true; }, 2600);
+}
+
+// Sung order: the chorus is repeated after every verse
+function sungOrder(s) {
+  const chorus = s.sections.find(x => x.label === 'Chorus');
+  if (!chorus) return s.sections;
+  return s.sections.filter(x => x.label !== 'Chorus').flatMap(v => [v, chorus]);
+}
+
+/* ---------- Saved state ---------- */
+const favs = new Set(store.json('favs', []).filter(n => song(n)));
+let service = store.json('service', []).filter(n => song(n));
+let repeatChorus = store.get('repeat') === '1';
+const saveFavs = () => store.set('favs', JSON.stringify([...favs]));
+const saveService = () => store.set('service', JSON.stringify(service));
 
 /* ---------- Appearance ---------- */
 function applyTheme(pick) {
@@ -333,24 +539,47 @@ const savedTheme = store.get('theme');
 if (savedTheme) applyTheme(savedTheme);
 document.querySelectorAll('[data-theme-pick]').forEach(b => b.onclick = () => { applyTheme(b.dataset.themePick); store.set('theme', b.dataset.themePick); });
 
+/* ---------- Keep the screen on while a hymn is open ---------- */
+let wakeLock = null;
+async function keepAwake(on) {
+  try {
+    if (on && !wakeLock && 'wakeLock' in navigator && document.visibilityState === 'visible') {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    } else if (!on && wakeLock) {
+      await wakeLock.release(); wakeLock = null;
+    }
+  } catch { wakeLock = null; }
+}
+// The system drops the lock when the app is hidden; take it again on return
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && (!$('reader').hidden || !$('present').hidden)) keepAwake(true);
+});
+
 /* ---------- Home ---------- */
-$('board').innerHTML = SONGS.map(s =>
-  `<button class="tile" data-n="${s.n}" title="${esc(s.title)}" aria-label="${s.n}. ${esc(s.title)}">${s.n}</button>`).join('');
 $('countPill').textContent = `${SONGS.length} hymns`;
+function renderBoard() {
+  $('board').innerHTML = SONGS.map(s =>
+    `<button class="tile${favs.has(s.n) ? ' starred' : ''}" data-n="${s.n}" title="${esc(s.title)}" aria-label="${s.n}. ${esc(s.title)}${favs.has(s.n) ? ' (favorite)' : ''}">${s.n}</button>`).join('');
+}
+function renderFavs() {
+  const list = [...favs].sort((a, b) => a - b);
+  $('favSection').hidden = !list.length || !!$('q').value;
+  $('favs').innerHTML = list.map(n => `<button class="fav" data-n="${n}"><span class="num-badge">${n}</span><span class="t">${esc(song(n).title)}</span></button>`).join('');
+}
+function renderHomeCards() {
+  const last = song(+store.get('last') || 0);
+  $('continue').hidden = !last;
+  if (last) { $('continue').dataset.n = last.n; $('contNum').textContent = last.n; $('contTitle').textContent = last.title; }
+  $('svcCard').hidden = !service.length;
+  $('svcCardText').textContent = `${service.length} ${service.length === 1 ? 'hymn' : 'hymns'}: ${service.join(', ')}`;
+}
+function renderHome() { renderBoard(); renderFavs(); renderHomeCards(); }
+renderHome();
 $('count').textContent = 'Choose a number';
 
-function showContinue() {
-  const s = SONGS[(+store.get('last') || 0) - 1];
-  $('continue').hidden = !s;
-  if (!s) return;
-  $('continue').dataset.n = s.n;
-  $('contNum').textContent = s.n;
-  $('contTitle').textContent = s.title;
-}
-showContinue();
-
-function highlight(title, q) {
-  let out = esc(title);
+function highlight(text, q) {
+  let out = esc(text);
   for (const w of q.split(' ').filter(w => w && !/^\d+$/.test(w))) {
     out = out.replace(new RegExp('(' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig'), '<mark>$1</mark>');
   }
@@ -362,22 +591,40 @@ function search() {
   const q = norm(raw);
   $('clear').hidden = !raw;
   $('seeAll').hidden = !!q;
+  renderFavs();
   if (!q) {
     $('board').hidden = false; $('results').hidden = true; $('empty').hidden = true;
     $('count').textContent = 'Choose a number';
     return;
   }
   const words = q.split(' ');
-  const hits = SONGS.filter(s => /^\d+$/.test(q) ? String(s.n).startsWith(q) : words.every(w => s.key.includes(w)));
+  let titleHits, wordHits = [];
+  if (/^\d+$/.test(q)) titleHits = SONGS.filter(s => String(s.n).startsWith(q));
+  else {
+    titleHits = SONGS.filter(s => words.every(w => s.key.includes(w)));
+    wordHits = SONGS.filter(s => !titleHits.includes(s) && words.every(w => s.lyricKey.includes(w))).map(s => {
+      // show the line that contains the most of the search words
+      const best = s.lyricLines.reduce((a, l) => {
+        const score = words.filter(w => l.n.includes(w)).length;
+        return score > a.score ? { score, line: l.raw } : a;
+      }, { score: -1, line: '' });
+      return { s, line: best.line };
+    });
+  }
+  const total = titleHits.length + wordHits.length;
   $('board').hidden = true;
-  $('results').hidden = !hits.length;
-  $('empty').hidden = !!hits.length;
-  $('empty').textContent = `No hymn titles match “${raw.trim()}”.`;
-  $('count').textContent = `${hits.length} ${hits.length === 1 ? 'match' : 'matches'}`;
-  $('results').innerHTML = hits.map(s => `<li><button class="row" data-n="${s.n}">
-    <span class="num-badge">${s.n}</span>
-    <span class="t">${highlight(s.title, q)}<span class="sub">${esc(s.ref || '')}${s.ref && s.tune ? ' · ' : ''}${s.tune ? 'Tune: ' + esc(s.tune) : ''}</span></span>
-  </button></li>`).join('');
+  $('results').hidden = !total;
+  $('empty').hidden = !!total;
+  $('empty').textContent = `No hymn titles or words match “${raw.trim()}”.`;
+  $('count').textContent = `${total} ${total === 1 ? 'match' : 'matches'}`;
+  const sub = s => `${esc(s.ref || '')}${s.ref && s.tune ? ' · ' : ''}${s.tune ? 'Tune: ' + esc(s.tune) : ''}`;
+  $('results').innerHTML =
+    (titleHits.length && wordHits.length ? '<li class="group">In the title</li>' : '') +
+    titleHits.map(s => `<li><button class="row" data-n="${s.n}"><span class="num-badge">${s.n}</span>
+      <span class="t">${highlight(s.title, q)}<span class="sub">${sub(s)}</span></span></button></li>`).join('') +
+    (wordHits.length ? '<li class="group">In the words</li>' : '') +
+    wordHits.map(({ s, line }) => `<li><button class="row" data-n="${s.n}"><span class="num-badge">${s.n}</span>
+      <span class="t">${esc(s.title)}<span class="quote">“${highlight(line, q)}”</span></span></button></li>`).join('');
 }
 $('q').addEventListener('input', search);
 $('q').addEventListener('keydown', e => {
@@ -387,13 +634,26 @@ $('q').addEventListener('keydown', e => {
 });
 $('clear').addEventListener('click', () => { $('q').value = ''; search(); $('q').focus(); });
 
+/* ---------- Dialogs ---------- */
+document.querySelectorAll('dialog').forEach(d => {
+  d.addEventListener('click', e => { if (e.target === d) d.close(); });
+  d.querySelectorAll('[data-close]').forEach(b => b.onclick = () => d.close());
+});
+const closeDialogs = () => document.querySelectorAll('dialog[open]').forEach(d => d.close());
+
 /* ---------- All hymns sheet ---------- */
-let sortBy = store.get('sort') === 'az' ? 'az' : 'num';
+let sortBy = ['az', 'fav'].includes(store.get('sort')) ? store.get('sort') : 'num';
 let current = 0;
 function renderToc() {
   document.querySelectorAll('[data-sort]').forEach(b => b.setAttribute('aria-pressed', b.dataset.sort === sortBy));
-  $('sheetCount').textContent = SONGS.length;
-  const list = sortBy === 'az' ? [...SONGS].sort((a, b) => sortKey(a.title).localeCompare(sortKey(b.title))) : SONGS;
+  $('sheetCount').textContent = sortBy === 'fav' ? favs.size : SONGS.length;
+  let list = SONGS;
+  if (sortBy === 'az') list = [...SONGS].sort((a, b) => sortKey(a.title).localeCompare(sortKey(b.title)));
+  if (sortBy === 'fav') list = SONGS.filter(s => favs.has(s.n));
+  if (!list.length) {
+    $('toc').innerHTML = '<li class="none">No favorites yet.<br>Open a hymn and tap Favorite to keep it here.</li>';
+    return;
+  }
   let letter = '';
   $('toc').innerHTML = list.map(s => {
     let head = '';
@@ -401,7 +661,7 @@ function renderToc() {
       const l = sortKey(s.title)[0].toUpperCase();
       if (l !== letter) { letter = l; head = `<li class="letter" aria-hidden="true">${l}</li>`; }
     }
-    return `${head}<li><button data-n="${s.n}" aria-current="${s.n === current}"><span class="n">${s.n}</span><span class="t">${esc(s.title)}</span></button></li>`;
+    return `${head}<li><button data-n="${s.n}" aria-current="${s.n === current}"><span class="n">${s.n}</span><span class="t">${esc(s.title)}</span>${favs.has(s.n) && sortBy !== 'fav' ? '<span class="star" aria-label="favorite">★</span>' : '<span></span>'}</button></li>`;
   }).join('');
 }
 function openSheet() {
@@ -411,16 +671,97 @@ function openSheet() {
   if (cur) cur.scrollIntoView({ block: 'center' }); else $('toc').scrollTop = 0;
 }
 document.querySelectorAll('[data-contents]').forEach(b => b.onclick = openSheet);
-$('sheetClose').onclick = () => $('sheet').close();
-$('sheet').addEventListener('click', e => { if (e.target === $('sheet')) $('sheet').close(); });
 document.querySelectorAll('[data-sort]').forEach(b => b.onclick = () => { sortBy = b.dataset.sort; store.set('sort', sortBy); renderToc(); $('toc').scrollTop = 0; });
 
-document.addEventListener('click', e => {
-  const b = e.target.closest('.tile, .row, .pager button, .toc button, #continue');
-  if (!b || !b.dataset.n) return;
-  if ($('sheet').open) $('sheet').close();
-  open(+b.dataset.n);
+/* ---------- Number keypad ---------- */
+let padVal = '';
+const maxDigits = String(SONGS.length).length;
+function renderPad() {
+  const s = song(+padVal);
+  $('padDisplay').textContent = padVal || '–';
+  $('padTitle').textContent = s ? s.title : padVal ? 'No hymn with that number' : `Type 1 to ${SONGS.length}`;
+  $('padGo').disabled = !s;
+}
+function padKey(k) {
+  if (k === 'del') padVal = padVal.slice(0, -1);
+  else if (k === 'go') { const s = song(+padVal); if (s) { $('pad').close(); open(s.n); } return; }
+  else if (padVal.length < maxDigits) padVal = (padVal + k).replace(/^0+/, '');
+  renderPad();
+}
+document.querySelectorAll('[data-pad]').forEach(b => b.onclick = () => { padVal = ''; renderPad(); $('pad').showModal(); });
+$('keys').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (b && !b.disabled) padKey(b.dataset.k); });
+$('pad').addEventListener('keydown', e => {
+  if (/^\d$/.test(e.key)) padKey(e.key);
+  else if (e.key === 'Backspace') padKey('del');
+  else if (e.key === 'Enter') { e.preventDefault(); padKey('go'); }
 });
+
+/* ---------- Service list ---------- */
+function renderService() {
+  $('svcCount').textContent = service.length || '';
+  $('svcList').innerHTML = service.length ? service.map((n, i) => `<li class="item">
+      <span class="order">${i + 1}</span>
+      <button class="open" data-svc-open="${i}"><span class="num-badge">${n}</span><span class="t">${esc(song(n).title)}</span></button>
+      <span class="ctl">
+        <button class="round sm" data-svc-move="${i},-1" aria-label="Move up" ${i ? '' : 'disabled'}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg></button>
+        <button class="round sm" data-svc-move="${i},1" aria-label="Move down" ${i < service.length - 1 ? '' : 'disabled'}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+        <button class="round sm" data-svc-remove="${i}" aria-label="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </span></li>`).join('')
+    : '<li class="none">No hymns yet.<br>Add one by number above, or open a hymn and tap Add to service.</li>';
+  ['svcStart', 'svcPresent', 'svcShare', 'svcClear'].forEach(id => { $(id).disabled = !service.length; });
+}
+function setService(list) { service = list; saveService(); renderService(); renderHomeCards(); }
+function openService() { renderService(); $('svcSheet').showModal(); }
+document.querySelectorAll('[data-service]').forEach(b => b.onclick = openService);
+$('addForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const n = +$('addNum').value.trim();
+  if (!song(n)) { toast(`There is no hymn ${$('addNum').value.trim() || 'number'}. Use 1 to ${SONGS.length}.`); return; }
+  if (service.includes(n)) { $('addNum').value = ''; toast(`No. ${n} is already in the list`); return; }
+  setService([...service, n]);
+  $('addNum').value = '';
+  toast(`Added No. ${n}`);
+});
+$('svcList').addEventListener('click', e => {
+  const o = e.target.closest('[data-svc-open]'), m = e.target.closest('[data-svc-move]'), r = e.target.closest('[data-svc-remove]');
+  if (o) { $('svcSheet').close(); open(service[+o.dataset.svcOpen], +o.dataset.svcOpen); }
+  if (m) {
+    const [i, d] = m.dataset.svcMove.split(',').map(Number), list = [...service];
+    [list[i], list[i + d]] = [list[i + d], list[i]];
+    setService(list);
+  }
+  if (r) setService(service.filter((_, i) => i !== +r.dataset.svcRemove));
+});
+$('svcStart').onclick = () => { $('svcSheet').close(); open(service[0], 0); };
+$('svcPresent').onclick = () => { $('svcSheet').close(); present(service); };
+$('svcClear').onclick = () => { setService([]); toast('Service list cleared'); };
+
+const shareUrl = () => location.href.split('#')[0] + '#s' + service.join('-');
+$('svcShare').onclick = async () => {
+  const url = shareUrl(), text = `Hymns for the service: ${service.join(', ')}`;
+  if (navigator.share) {
+    try { await navigator.share({ title: 'Service list', text, url }); return; } catch (err) { if (err && err.name === 'AbortError') return; }
+  }
+  try { await navigator.clipboard.writeText(url); toast('Link copied. Paste it into a message.'); }
+  catch { $('addNum').value = url; $('addNum').select(); toast('Copy the link from the box above'); }
+};
+
+// Opening a shared link (#s12-4-33) offers that list
+let pendingShared = null;
+function checkSharedLink() {
+  const m = /^#s(\d+(?:-\d+)*)$/.exec(location.hash);
+  if (!m) return;
+  const list = [...new Set(m[1].split('-').map(Number))].filter(n => song(n));
+  try { history.replaceState(null, '', location.pathname + location.search); } catch {}
+  if (!list.length || list.join() === service.join()) return;
+  if (!service.length) { setService(list); toast(`Service list loaded: ${list.length} hymns`); }
+  else { pendingShared = list; $('sharedText').textContent = `${list.length} hymns: ${list.join(', ')}`; $('shared').hidden = false; }
+  if ($('home').hidden) showHome();
+}
+checkSharedLink();
+addEventListener('hashchange', checkSharedLink);
+$('sharedYes').onclick = () => { setService(pendingShared); $('shared').hidden = true; openService(); };
+$('sharedNo').onclick = () => { $('shared').hidden = true; };
 
 /* ---------- Reader ---------- */
 let size = parseFloat(store.get('lyricSize')) || 1.3;
@@ -430,16 +771,31 @@ $('smaller').onclick = () => { size = Math.max(1, +(size - .1).toFixed(2)); appl
 $('bigger').onclick = () => { size = Math.min(2.4, +(size + .1).toFixed(2)); applySize(); store.set('lyricSize', size); };
 
 const icons = {
-  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6.5A2.5 2.5 0 0 0 4 21.5 2.5 2.5 0 0 0 6.5 24"/></svg>',
+  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6.5A2.5 2.5 0 0 0 4 21.5"/></svg>',
   note: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+  star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path class="fill" d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>',
+  list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h8M3 6h.01M3 12h.01M3 18h.01M19 15v6M16 18h6"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  repeat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>',
+  screen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
 };
 
+let svcPos = -1;   // position in the service list when reading through it, otherwise -1
 function render(n) {
-  const s = SONGS[n - 1];
-  const prev = SONGS[n - 2], next = SONGS[n];
+  const s = song(n);
+  const prev = song(n - 1), next = song(n + 1);
+  const hasChorus = s.sections.some(x => x.label === 'Chorus');
+  const sections = repeatChorus ? sungOrder(s) : s.sections;
+  const inService = service.includes(n);
   current = n;
+  const svcNext = svcPos >= 0 ? song(service[svcPos + 1]) : null;
   $('topLabel').innerHTML = `No. ${s.n}<small>${esc(s.title)}</small>`;
   $('song').innerHTML = `
+    ${svcPos >= 0 ? `<div class="svc-strip">
+      <span>Service · ${svcPos + 1} of ${service.length}${svcNext ? ` · Next: No. ${svcNext.n}` : ''}</span>
+      <button data-svc-step="-1" ${svcPos > 0 ? '' : 'disabled'}>Back</button>
+      <button data-svc-step="1" ${svcNext ? '' : 'disabled'}>Next</button>
+    </div>` : ''}
     <header>
       <span class="bignum">${s.n}</span>
       <h2>${esc(s.title)}</h2>
@@ -447,9 +803,15 @@ function render(n) {
         ${s.ref ? `<span class="chip">${icons.book}${esc(s.ref)}</span>` : ''}
         ${s.tune ? `<span class="chip">${icons.note}${esc(s.tune)}</span>` : ''}
       </div>
+      <div class="acts">
+        <button class="pill" data-act="fav" aria-pressed="${favs.has(n)}">${icons.star}Favorite</button>
+        <button class="pill" data-act="svc" aria-pressed="${inService}">${inService ? icons.check + 'In service' : icons.list + 'Add to service'}</button>
+        ${hasChorus ? `<button class="pill" data-act="repeat" aria-pressed="${repeatChorus}">${icons.repeat}Repeat chorus</button>` : ''}
+        <button class="pill" data-act="present">${icons.screen}Present</button>
+      </div>
     </header>
     <div class="stanzas">
-      ${s.sections.map(sec => sec.label === 'Chorus'
+      ${sections.map(sec => sec.label === 'Chorus'
         ? `<div class="chorus"><span class="clabel">Chorus</span><p>${sec.lines.map(esc).join('<br>')}</p></div>`
         : `<div class="stanza"><span class="vn">${sec.label}</span><p>${sec.lines.map(esc).join('<br>')}</p></div>`).join('')}
     </div>
@@ -457,70 +819,169 @@ function render(n) {
       ${prev ? `<button data-n="${prev.n}"><small>← No. ${prev.n}</small><span>${esc(prev.title)}</span></button>` : ''}
       ${next ? `<button class="next" data-n="${next.n}"><small>No. ${next.n} →</small><span>${esc(next.title)}</span></button>` : ''}
     </nav>
-    <p class="hint">Swipe left or right to change hymn</p>`;
+    <p class="hint">Swipe left or right to change hymn · The screen stays on while a hymn is open</p>`;
 }
+
+$('song').addEventListener('click', e => {
+  const a = e.target.closest('[data-act]'), st = e.target.closest('[data-svc-step]');
+  if (st) { stepService(+st.dataset.svcStep); return; }
+  if (!a) return;
+  const n = current;
+  if (a.dataset.act === 'fav') {
+    favs.has(n) ? favs.delete(n) : favs.add(n);
+    saveFavs(); toast(favs.has(n) ? `No. ${n} added to favorites` : `No. ${n} removed from favorites`);
+  }
+  if (a.dataset.act === 'svc') {
+    if (service.includes(n)) { setService(service.filter(x => x !== n)); toast(`No. ${n} removed from the service list`); if (svcPos >= 0) svcPos = -1; }
+    else { setService([...service, n]); toast(`No. ${n} added to the service list (${service.length})`); }
+  }
+  if (a.dataset.act === 'repeat') { repeatChorus = !repeatChorus; store.set('repeat', repeatChorus ? '1' : '0'); }
+  if (a.dataset.act === 'present') { present(svcPos >= 0 ? service.slice(svcPos) : [n]); return; }
+  const y = window.scrollY; render(n); window.scrollTo(0, y);
+});
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('.tile, .row, .fav, .pager button, .toc button, #continue');
+  if (!b || !b.dataset.n) return;
+  closeDialogs();
+  open(+b.dataset.n);
+});
 
 // Each opened hymn gets a history entry, so the phone's back gesture returns to the list instead of leaving the app.
 let homeScroll = 0;
 const songFromHash = () => { const m = /^#h(\d+)$/.exec(location.hash); return m ? +m[1] : 0; };
-function show(n) {
-  if (!SONGS[n - 1]) return false;
+function show(n, pos = -1) {
+  if (!song(n)) return false;
   if (!$('home').hidden) homeScroll = window.scrollY;
-  transition(() => {
-    render(n);
-    $('home').hidden = true; $('reader').hidden = false;
-    window.scrollTo(0, 0);
-  });
+  svcPos = service[pos] === n ? pos : -1;
+  render(n);
+  $('home').hidden = true; $('reader').hidden = false;
+  window.scrollTo(0, 0);
   store.set('last', n);
+  keepAwake(true);
   return true;
 }
 function showHome() {
-  current = 0;
-  transition(() => {
-    showContinue();
-    $('reader').hidden = true; $('home').hidden = false;
-    window.scrollTo(0, homeScroll);
-  });
+  current = 0; svcPos = -1;
+  keepAwake(false);
+  renderHome();
+  $('reader').hidden = true; $('home').hidden = false;
+  window.scrollTo(0, homeScroll);
 }
-function open(n) {
+function open(n, pos = -1) {
   const fromHome = !$('home').hidden;
-  if (!show(n)) return;
+  if (!show(n, pos)) return;
   try {
-    if (fromHome) history.pushState({ song: n }, '', '#h' + n);
-    else history.replaceState({ song: n }, '', '#h' + n);
+    const state = { song: n, pos: svcPos };
+    if (fromHome) history.pushState(state, '', '#h' + n);
+    else history.replaceState(state, '', '#h' + n);
   } catch {}
 }
+function stepService(d) {
+  const i = svcPos + d;
+  if (svcPos >= 0 && service[i]) open(service[i], i);
+}
+function step(d) { svcPos >= 0 ? stepService(d) : open(current + d); }
 function close() {
   if (history.state && history.state.song) { history.back(); return; }
   showHome();
   try { history.replaceState(null, '', location.pathname + location.search); } catch {}
 }
-window.addEventListener('popstate', () => { const n = songFromHash(); if (!n || !show(n)) showHome(); });
+window.addEventListener('popstate', () => {
+  if (!$('present').hidden) { endPresent(true); return; }
+  const n = songFromHash();
+  if (!n || !show(n, history.state && history.state.pos != null ? history.state.pos : -1)) showHome();
+});
 $('back').onclick = close;
 
+/* ---------- Presentation ---------- */
+let pres = null;   // { slides, i }
+function slidesFor(n) {
+  const s = song(n);
+  return [{ s, kind: 'title' }, ...sungOrder(s).map(sec => ({ s, kind: sec.label === 'Chorus' ? 'chorus' : 'verse', sec }))];
+}
+function fitSlide() {
+  // largest type size at which the slide still fits the stage
+  const box = $('pFit');
+  let lo = 14, hi = Math.min(140, innerHeight / 4);
+  while (hi - lo > 1) {
+    const mid = (lo + hi) / 2;
+    box.style.fontSize = mid + 'px';
+    if (box.scrollHeight > box.clientHeight || box.scrollWidth > box.clientWidth) hi = mid; else lo = mid;
+  }
+  box.style.fontSize = lo + 'px';
+}
+function renderSlide() {
+  const { slides, i } = pres, sl = slides[i], s = sl.s;
+  $('pTitle').textContent = `No. ${s.n} · ${s.title}`;
+  $('pCount').textContent = `${i + 1} / ${slides.length}`;
+  $('pBar').style.width = ((i + 1) / slides.length * 100) + '%';
+  $('pPrev').disabled = i === 0;
+  $('pNext').disabled = i === slides.length - 1;
+  $('pFit').innerHTML = sl.kind === 'title'
+    ? `<div class="p-num">${s.n}</div><div class="p-title">${esc(s.title)}</div><div class="p-meta">${[s.ref, s.tune && 'Tune: ' + s.tune].filter(Boolean).map(esc).join(' · ')}</div>`
+    : `<div class="p-label">${sl.kind === 'chorus' ? 'Chorus' : 'Verse ' + sl.sec.label}</div><div class="p-lines${sl.kind === 'chorus' ? ' it' : ''}">${sl.sec.lines.map(esc).join('<br>')}</div>`;
+  fitSlide();
+}
+function present(list) {
+  pres = { slides: list.flatMap(slidesFor), i: 0 };
+  $('present').hidden = false;
+  document.documentElement.requestFullscreen?.().catch(() => {});
+  keepAwake(true);
+  try { history.pushState({ ...(history.state || {}), present: true }, '', location.href); } catch {}
+  renderSlide();
+}
+function endPresent(fromHistory) {
+  $('present').hidden = true; pres = null;
+  if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+  if ($('reader').hidden) keepAwake(false);
+  if (!fromHistory) { try { history.back(); } catch {} }
+}
+function slide(d) {
+  if (!pres) return;
+  const i = Math.max(0, Math.min(pres.slides.length - 1, pres.i + d));
+  if (i !== pres.i) { pres.i = i; renderSlide(); }
+}
+$('pClose').onclick = () => endPresent(false);
+$('pPrev').onclick = () => slide(-1);
+$('pNext').onclick = () => slide(1);
+$('pStage').addEventListener('click', e => slide(e.clientX < innerWidth / 3 ? -1 : 1));
+addEventListener('resize', () => { if (pres) fitSlide(); });
+
+/* ---------- Keyboard and swipe ---------- */
 document.addEventListener('keydown', e => {
-  if ($('sheet').open) return;
+  if (pres) {
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); slide(1); }
+    if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); slide(-1); }
+    if (e.key === 'Escape') endPresent(false);
+    return;
+  }
+  if (document.querySelector('dialog[open]')) return;
   if ($('reader').hidden) {
     if (e.key === '/' && document.activeElement !== $('q')) { e.preventDefault(); $('q').focus(); }
     return;
   }
   if (e.key === 'Escape') close();
-  if (e.key === 'ArrowRight') open(current + 1);
-  if (e.key === 'ArrowLeft') open(current - 1);
+  if (e.key === 'ArrowRight') step(1);
+  if (e.key === 'ArrowLeft') step(-1);
 });
 
-// Swipe between hymns; touches that start near a screen edge are left to the system's back gesture.
-let touch = null;
-$('reader').addEventListener('touchstart', e => {
-  const t = e.touches[0];
-  touch = (e.touches.length === 1 && t.clientX > 28 && t.clientX < innerWidth - 28) ? { x: t.clientX, y: t.clientY } : null;
-}, { passive: true });
-$('reader').addEventListener('touchend', e => {
-  if (!touch) return;
-  const t = e.changedTouches[0], dx = t.clientX - touch.x, dy = t.clientY - touch.y;
-  touch = null;
-  if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.6) open(current + (dx < 0 ? 1 : -1));
-}, { passive: true });
+// Touches that start near a screen edge are left to the system's back gesture.
+function onSwipe(el, fn) {
+  let t0 = null;
+  el.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    t0 = (e.touches.length === 1 && t.clientX > 28 && t.clientX < innerWidth - 28) ? { x: t.clientX, y: t.clientY } : null;
+  }, { passive: true });
+  el.addEventListener('touchend', e => {
+    if (!t0) return;
+    const t = e.changedTouches[0], dx = t.clientX - t0.x, dy = t.clientY - t0.y;
+    t0 = null;
+    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.6) fn(dx < 0 ? 1 : -1);
+  }, { passive: true });
+}
+onSwipe($('reader'), step);
+onSwipe($('pStage'), slide);
 
 if (songFromHash()) show(songFromHash());
 
@@ -528,7 +989,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:' && document.qu
   // When a new version takes over (after an update is published), reload once so it shows right away.
   let hadController = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (hadController) location.reload();
+    if (hadController && !pres) location.reload();
     hadController = true;
   });
   navigator.serviceWorker.register('sw.js').catch(() => {});
