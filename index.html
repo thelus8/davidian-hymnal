@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f8f6fb">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e0a12">
@@ -55,7 +55,8 @@
   color-scheme: dark;
 }
 [hidden] { display: none !important; }
-html { background: var(--bg); }
+/* The app itself never zooms like a canvas; pinching inside a hymn changes the text size instead (see Reader). */
+html { background: var(--bg); touch-action: pan-x pan-y; }
 body {
   color: var(--ink); font-family: var(--ui); -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
   background: radial-gradient(900px 420px at 50% -160px, var(--glow), transparent 70%) no-repeat, var(--bg);
@@ -846,6 +847,22 @@ const applySize = () => document.documentElement.style.setProperty('--lyric-size
 applySize();
 $('smaller').onclick = () => { size = Math.max(1, +(size - .1).toFixed(2)); applySize(); store.set('lyricSize', size); };
 $('bigger').onclick = () => { size = Math.min(2.4, +(size + .1).toFixed(2)); applySize(); store.set('lyricSize', size); };
+
+// Pinching with two fingers in a hymn resizes the text, within the same limits as the A buttons.
+addEventListener('gesturestart', e => e.preventDefault());   // iOS would otherwise zoom the whole page
+{
+  let pinch = null;
+  const gap = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  const rd = $('reader');
+  rd.addEventListener('touchstart', e => { if (e.touches.length === 2) pinch = { d: gap(e.touches), size }; }, { passive: true });
+  rd.addEventListener('touchmove', e => {
+    if (!pinch || e.touches.length !== 2) return;
+    e.preventDefault();
+    const next = Math.min(2.4, Math.max(1, +(pinch.size * gap(e.touches) / pinch.d).toFixed(2)));
+    if (next !== size) { size = next; applySize(); }
+  }, { passive: false });
+  rd.addEventListener('touchend', e => { if (pinch && e.touches.length < 2) { pinch = null; store.set('lyricSize', size); } });
+}
 
 const icons = {
   book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6.5A2.5 2.5 0 0 0 4 21.5"/></svg>',

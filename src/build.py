@@ -11,7 +11,7 @@ html = html.replace('__SONGS__', json.dumps(songs, ensure_ascii=False)).replace(
 html = html.replace('__BUILT__', datetime.date.today().strftime('%b %-d, %Y'))
 
 head = '''<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f8f6fb">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e0a12">

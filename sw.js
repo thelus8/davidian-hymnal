@@ -1,6 +1,6 @@
 // Offline support: the page is loaded fresh when online and from the cache when offline;
 // icons and Google Fonts are cached on install.
-const VERSION = 'hymnal-3280bf5f48';
+const VERSION = 'hymnal-ef07bcace3';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png'];
 
