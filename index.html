@@ -206,11 +206,14 @@ svg.i { width: 20px; height: 20px; flex: none; }
 .chip svg { width: 14px; height: 14px; }
 .acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 
-.stanzas { display: grid; gap: 22px; max-width: 34em; }
-.stanza { display: grid; grid-template-columns: 1.9rem 1fr; gap: 12px; font: 400 var(--lyric-size)/1.55 var(--lyric); }
-.stanza .vn { width: 1.6rem; height: 1.6rem; border-radius: 50%; display: grid; place-items: center; margin-top: .22em; font: 600 .75rem var(--ui); color: var(--accent); background: var(--accent-soft); }
+.stanzas { display: grid; gap: 22px; max-width: 40em; }
+.stanza { display: grid; grid-template-columns: 1.45rem 1fr; gap: 9px; font: 400 var(--lyric-size)/1.55 var(--lyric); }
+.stanza .vn { width: 1.45rem; height: 1.45rem; border-radius: 50%; display: grid; place-items: center; margin-top: .25em; font: 600 .7rem var(--ui); color: var(--accent); background: var(--accent-soft); }
 .stanza p { margin: 0; min-width: 0; }
-.chorus { display: block; font: 400 var(--lyric-size)/1.55 var(--lyric); background: var(--surface-2); border-radius: var(--radius); padding: 16px 18px 18px; margin-left: calc(1.9rem + 12px); }
+.chorus { display: block; font: 400 var(--lyric-size)/1.55 var(--lyric); background: var(--surface-2); border-radius: var(--radius); padding: 14px 16px 16px; }
+/* each sung line is a block; when it wraps, the continuation is indented so the line start stays visible */
+.ln { display: block; padding-left: .75em; text-indent: -.75em; }
+.p-lines .ln { padding-left: 0; text-indent: 0; }
 .chorus .clabel { display: block; font: 600 .7rem var(--ui); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
 .chorus p { margin: 0; font-style: italic; }
 
@@ -481,6 +484,13 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
       <button data-theme-pick="dark" aria-pressed="false">Dark</button>
     </div>
   </div>
+  <div class="sheet-foot" style="border-top: 0; padding-top: 0">
+    <span>Line breaks</span>
+    <div class="seg" role="group" aria-label="Line breaks">
+      <button data-layout="flow" aria-pressed="true">Flowing</button>
+      <button data-layout="printed" aria-pressed="false">As printed</button>
+    </div>
+  </div>
 </dialog>
 
 <dialog class="sheet" id="svcSheet" aria-labelledby="svcTitle">
@@ -574,6 +584,22 @@ function sungOrder(s) {
 const favs = new Set(store.json('favs', []).filter(n => song(n)));
 let service = store.json('service', []).filter(n => song(n));
 let repeatChorus = store.get('repeat') === '1';
+let flowText = store.get('layout') !== 'printed';
+
+// The PDF breaks long lines to fit its page. In flowing mode, a line that starts in lower case after a line
+// with no closing punctuation is joined back to it, so the text rewraps to the screen and the chosen size.
+function sungLines(lines) {
+  if (!flowText) return lines;
+  const out = [];
+  for (const l of lines) {
+    const first = (l.match(/[A-Za-z]/) || [''])[0];
+    const prev = out[out.length - 1];
+    if (prev !== undefined && first && first === first.toLowerCase() && !/[.!?;:]["”’)]?$/.test(prev)) out[out.length - 1] = prev + ' ' + l;
+    else out.push(l);
+  }
+  return out;
+}
+const linesHtml = lines => sungLines(lines).map(l => `<span class="ln">${esc(l)}</span>`).join('');
 const saveFavs = () => store.set('favs', JSON.stringify([...favs]));
 const saveService = () => store.set('service', JSON.stringify(service));
 
@@ -719,6 +745,16 @@ function openSheet() {
   if (cur) cur.scrollIntoView({ block: 'center' }); else $('toc').scrollTop = 0;
 }
 document.querySelectorAll('[data-contents]').forEach(b => b.onclick = openSheet);
+function applyLayout() {
+  document.querySelectorAll('[data-layout]').forEach(b => b.setAttribute('aria-pressed', (b.dataset.layout === 'flow') === flowText));
+}
+applyLayout();
+document.querySelectorAll('[data-layout]').forEach(b => b.onclick = () => {
+  flowText = b.dataset.layout === 'flow';
+  store.set('layout', flowText ? 'flow' : 'printed');
+  applyLayout();
+  if (!$('reader').hidden) { const y = window.scrollY; render(current); window.scrollTo(0, y); }
+});
 document.querySelectorAll('[data-sort]').forEach(b => b.onclick = () => { sortBy = b.dataset.sort; store.set('sort', sortBy); renderToc(); $('toc').scrollTop = 0; });
 
 /* ---------- Number keypad ---------- */
@@ -861,8 +897,8 @@ function render(n) {
     </header>
     <div class="stanzas">
       ${sections.map(sec => sec.label === 'Chorus'
-        ? `<div class="chorus"><span class="clabel">Chorus</span><p>${sec.lines.map(esc).join('<br>')}</p></div>`
-        : `<div class="stanza"><span class="vn">${sec.label}</span><p>${sec.lines.map(esc).join('<br>')}</p></div>`).join('')}
+        ? `<div class="chorus"><span class="clabel">Chorus</span><p>${linesHtml(sec.lines)}</p></div>`
+        : `<div class="stanza"><span class="vn">${sec.label}</span><p>${linesHtml(sec.lines)}</p></div>`).join('')}
     </div>
     <nav class="pager">
       ${prev ? `<button data-n="${prev.n}"><small>← No. ${prev.n}</small><span>${esc(prev.title)}</span></button>` : ''}
@@ -969,7 +1005,7 @@ function renderSlide() {
   $('pNext').disabled = i === slides.length - 1;
   $('pFit').innerHTML = sl.kind === 'title'
     ? `<div class="p-num">${s.n}</div><div class="p-title">${esc(s.title)}</div><div class="p-meta">${[s.ref, s.tune && 'Tune: ' + s.tune].filter(Boolean).map(esc).join(' · ')}</div>`
-    : `<div class="p-label">${sl.kind === 'chorus' ? 'Chorus' : 'Verse ' + sl.sec.label}</div><div class="p-lines${sl.kind === 'chorus' ? ' it' : ''}">${sl.sec.lines.map(esc).join('<br>')}</div>`;
+    : `<div class="p-label">${sl.kind === 'chorus' ? 'Chorus' : 'Verse ' + sl.sec.label}</div><div class="p-lines${sl.kind === 'chorus' ? ' it' : ''}">${linesHtml(sl.sec.lines)}</div>`;
   fitSlide();
 }
 function present(list) {
