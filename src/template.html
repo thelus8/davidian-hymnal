@@ -195,8 +195,9 @@ svg.i { width: 20px; height: 20px; flex: none; }
 .acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 
 .stanzas { display: grid; gap: 22px; max-width: 40em; }
-.stanza { display: grid; grid-template-columns: 1.45rem 1fr; gap: 9px; font: 400 var(--lyric-size)/1.55 var(--lyric); }
-.stanza .vn { width: 1.45rem; height: 1.45rem; border-radius: 50%; display: grid; place-items: center; margin-top: .25em; font: 600 .7rem var(--ui); color: var(--accent); background: var(--accent-soft); }
+.stanza { font: 400 var(--lyric-size)/1.55 var(--lyric); }
+/* verse label sits above the verse, like the chorus label, so the words use the full width */
+.stanza .vn { display: block; font: 600 .7rem var(--ui); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
 .stanza p { margin: 0; min-width: 0; }
 .chorus { display: block; font: 400 var(--lyric-size)/1.55 var(--lyric); background: var(--surface-2); border-radius: var(--radius); padding: 14px 16px 16px; }
 /* each sung line is a block; when it wraps, the continuation is indented so the line start stays visible */
@@ -888,7 +889,7 @@ function render(n) {
     <div class="stanzas">
       ${sections.map(sec => sec.label === 'Chorus'
         ? `<div class="chorus"><span class="clabel">Chorus</span><p>${linesHtml(sec.lines)}</p></div>`
-        : `<div class="stanza"><span class="vn">${sec.label}</span><p>${linesHtml(sec.lines)}</p></div>`).join('')}
+        : `<div class="stanza"><span class="vn">Verse ${sec.label}</span><p>${linesHtml(sec.lines)}</p></div>`).join('')}
     </div>
     <nav class="pager">
       ${prev ? `<button data-n="${prev.n}"><small>← No. ${prev.n}</small><span>${esc(prev.title)}</span></button>` : ''}
