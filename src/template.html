@@ -194,15 +194,15 @@ svg.i { width: 20px; height: 20px; flex: none; }
 .chip svg { width: 14px; height: 14px; }
 .acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 
-.stanzas { display: grid; gap: 22px; max-width: 40em; }
+.stanzas { display: grid; gap: 24px; max-width: 40em; margin-inline: auto; text-align: center; }
 .stanza { font: 400 var(--lyric-size)/1.55 var(--lyric); }
 /* verse label sits above the verse, like the chorus label, so the words use the full width */
 .stanza .vn { display: block; font: 600 .7rem var(--ui); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
 .stanza p { margin: 0; min-width: 0; }
 .chorus { display: block; font: 400 var(--lyric-size)/1.55 var(--lyric); background: var(--surface-2); border-radius: var(--radius); padding: 14px 16px 16px; }
-/* each sung line is a block; when it wraps, the continuation is indented so the line start stays visible */
-.ln { display: block; padding-left: .75em; text-indent: -.75em; }
-.p-lines .ln { padding-left: 0; text-indent: 0; }
+/* each sung line is its own centered block, with a little air between lines so a wrapped line reads as one */
+.ln { display: block; text-wrap: pretty; }
+.ln + .ln { margin-top: .3em; }
 .chorus .clabel { display: block; font: 600 .7rem var(--ui); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
 .chorus p { margin: 0; font-style: italic; }
 
@@ -577,20 +577,9 @@ let service = store.json('service', []).filter(n => song(n));
 let repeatChorus = store.get('repeat') === '1';
 let flowText = store.get('layout') !== 'printed';
 
-// The PDF breaks long lines to fit its page. In flowing mode, a line that starts in lower case after a line
-// with no closing punctuation is joined back to it, so the text rewraps to the screen and the chosen size.
-function sungLines(lines) {
-  if (!flowText) return lines;
-  const out = [];
-  for (const l of lines) {
-    const first = (l.match(/[A-Za-z]/) || [''])[0];
-    const prev = out[out.length - 1];
-    if (prev !== undefined && first && first === first.toLowerCase() && !/[.!?;:]["”’)]?$/.test(prev)) out[out.length - 1] = prev + ' ' + l;
-    else out.push(l);
-  }
-  return out;
-}
-const linesHtml = lines => sungLines(lines).map(l => `<span class="ln">${esc(l)}</span>`).join('');
+// Flowing mode shows each verse regrouped into a few longer lines (made by src/reformat.py and stored as
+// "flow"); they rewrap to the screen and the chosen size. As printed shows the PDF's own line breaks.
+const linesHtml = sec => ((flowText && sec.flow) || sec.lines).map(l => `<span class="ln">${esc(l)}</span>`).join('');
 const saveFavs = () => store.set('favs', JSON.stringify([...favs]));
 const saveService = () => store.set('service', JSON.stringify(service));
 
@@ -888,8 +877,8 @@ function render(n) {
     </header>
     <div class="stanzas">
       ${sections.map(sec => sec.label === 'Chorus'
-        ? `<div class="chorus"><span class="clabel">Chorus</span><p>${linesHtml(sec.lines)}</p></div>`
-        : `<div class="stanza"><span class="vn">Verse ${sec.label}</span><p>${linesHtml(sec.lines)}</p></div>`).join('')}
+        ? `<div class="chorus"><span class="clabel">Chorus</span><p>${linesHtml(sec)}</p></div>`
+        : `<div class="stanza"><span class="vn">Verse ${sec.label}</span><p>${linesHtml(sec)}</p></div>`).join('')}
     </div>
     <nav class="pager">
       ${prev ? `<button data-n="${prev.n}"><small>← No. ${prev.n}</small><span>${esc(prev.title)}</span></button>` : ''}
@@ -996,7 +985,7 @@ function renderSlide() {
   $('pNext').disabled = i === slides.length - 1;
   $('pFit').innerHTML = sl.kind === 'title'
     ? `<div class="p-num">${s.n}</div><div class="p-title">${esc(s.title)}</div><div class="p-meta">${[s.ref, s.tune && 'Tune: ' + s.tune].filter(Boolean).map(esc).join(' · ')}</div>`
-    : `<div class="p-label">${sl.kind === 'chorus' ? 'Chorus' : 'Verse ' + sl.sec.label}</div><div class="p-lines${sl.kind === 'chorus' ? ' it' : ''}">${linesHtml(sl.sec.lines)}</div>`;
+    : `<div class="p-label">${sl.kind === 'chorus' ? 'Chorus' : 'Verse ' + sl.sec.label}</div><div class="p-lines${sl.kind === 'chorus' ? ' it' : ''}">${linesHtml(sl.sec)}</div>`;
   fitSlide();
 }
 function present(list) {

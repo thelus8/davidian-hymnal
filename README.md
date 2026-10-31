@@ -21,6 +21,7 @@ The site at the top of this repository (`index.html`, `sw.js`, `manifest.webmani
 | `src/sw.js`, `src/manifest.webmanifest` | Offline support and install settings. |
 | `src/build.py` | Builds the site from the files above. |
 | `src/parse.py` | Re-reads the songs from the original PDF. **This overwrites `songs.json`**, including any hand edits. |
+| `src/reformat.py` | Regroups each verse into 2–4 longer lines (the `flow` field) and drops capitals that were only there because a printed line started there. It fills only verses with no `flow` yet; `--all` redoes every verse. |
 | `src/make_icons.py` | Remakes the home-screen icons from the PDF cover. |
 
 ### Fix a typo or add a song
@@ -43,6 +44,8 @@ The site at the top of this repository (`index.html`, `sw.js`, `manifest.webmani
    ```
 
    Keep songs in number order. `caps` is extra search text and can match the title.
+
+   Each verse has two forms: `lines` (as printed in the book) and `flow` (the regrouped lines the app shows by default). After changing `lines`, delete that verse's `flow` and run `python3 src/reformat.py` to regroup it, or edit `flow` by hand.
 
 2. Rebuild (needs only Python 3, which comes with macOS):
 
