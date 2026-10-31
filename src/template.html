@@ -331,7 +331,8 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
 .dots { display: flex; gap: 5px; }
 .dots i { width: 6px; height: 6px; border-radius: 3px; background: var(--line); transition: width .2s; }
 .dots i.on { width: 16px; background: var(--accent); }
-.sheet-help { padding: 10px max(18px, env(safe-area-inset-right, 0px)) 0 max(18px, env(safe-area-inset-left, 0px)); border-top: 1px solid var(--line); }
+.sheet-help { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; padding: 10px max(18px, env(safe-area-inset-right, 0px)) 0 max(18px, env(safe-area-inset-left, 0px)); border-top: 1px solid var(--line); }
+.update-row { display: flex; align-items: center; gap: 10px; font: 400 .78rem var(--ui); color: var(--muted); }
 
 /* ---------- Presentation ---------- */
 #present {
@@ -463,7 +464,8 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
     </div>
   </div>
   <ul class="toc" id="toc" tabindex="-1" autofocus></ul>
-  <div class="sheet-help"><button class="linkbtn" id="tourAgain">How to use the Hymnal</button></div>
+  <div class="sheet-help"><button class="linkbtn" id="tourAgain">How to use the Hymnal</button>
+    <span class="update-row" id="updateRow" hidden><span>Version __BUILT__</span><button class="linkbtn" id="checkUpdate">Check for updates</button></span></div>
   <div class="sheet-foot" style="border-top: 0">
     <span>Appearance</span>
     <div class="seg" role="group" aria-label="Appearance">
@@ -1006,6 +1008,7 @@ function present(list) {
 }
 function endPresent(fromHistory) {
   $('present').hidden = true; pres = null;
+  if (reloadWhenFree) { reloadForUpdate(); return; }
   if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
   if ($('reader').hidden) keepAwake(false);
   if (!fromHistory) { try { history.back(); } catch {} }
@@ -1173,13 +1176,41 @@ if (songFromHash()) show(songFromHash());
 else if (store.get('toured') !== '1' && !sharedMatchOnLoad) startTour();
 renderInstall();
 
+/* ---------- Updates ---------- */
+// An app opened from the home screen is often resumed rather than reloaded, so it never asks for a newer
+// version on its own. It checks when it comes back to the screen, and from the button in the All Hymns menu.
+let swReg = null, reloadWhenFree = false, lastCheck = 0;
+function reloadForUpdate() {
+  try { sessionStorage.setItem('justUpdated', '1'); } catch {}
+  location.reload();
+}
+async function checkForUpdate(manual) {
+  if (!swReg) return;
+  if (!navigator.onLine) { if (manual) toast('You’re offline. Connect to the internet to check for updates.'); return; }
+  lastCheck = Date.now();
+  if (manual) { $('checkUpdate').disabled = true; $('checkUpdate').textContent = 'Checking…'; }
+  try { await swReg.update(); } catch { if (manual) toast('Couldn’t reach the server. Try again in a moment.'); }
+  if (!manual) return;
+  $('checkUpdate').disabled = false; $('checkUpdate').textContent = 'Check for updates';
+  if (swReg.installing || swReg.waiting) toast('Downloading the update…');
+  else toast('You have the latest version');
+}
+
 if ('serviceWorker' in navigator && location.protocol !== 'file:' && document.querySelector('link[rel="manifest"]')) {
-  // When a new version takes over (after an update is published), reload once so it shows right away.
+  // When a new version takes over, reload once so it shows right away (after a presentation ends, if one is running).
   let hadController = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (hadController && !pres) location.reload();
+    if (hadController) { if (pres) reloadWhenFree = true; else reloadForUpdate(); }
     hadController = true;
   });
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  navigator.serviceWorker.register('sw.js').then(reg => { swReg = reg; $('updateRow').hidden = false; }).catch(() => {});
+  $('checkUpdate').onclick = () => checkForUpdate(true);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && Date.now() - lastCheck > 60000) checkForUpdate(false);
+  });
+  addEventListener('online', () => checkForUpdate(false));
 }
+try {
+  if (sessionStorage.getItem('justUpdated')) { sessionStorage.removeItem('justUpdated'); toast('Updated to the newest version'); }
+} catch {}
 </script>

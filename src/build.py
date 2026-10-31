@@ -1,12 +1,14 @@
 # Builds the site at the repository root from template.html + songs.json + cover.jpg.
 # Usage: python3 src/build.py   (standard library only)
-import json, base64, pathlib, hashlib, shutil, re
+import json, base64, pathlib, hashlib, shutil, re, datetime
 here = pathlib.Path(__file__).parent
 root = here.parent
 songs = json.load(open(here / 'songs.json', encoding='utf-8'))
 cover = 'data:image/jpeg;base64,' + base64.b64encode((here / 'cover.jpg').read_bytes()).decode()
 html = (here / 'template.html').read_text(encoding='utf-8')
 html = html.replace('__SONGS__', json.dumps(songs, ensure_ascii=False)).replace('__COVER__', cover)
+# shown in the All Hymns menu so people can tell which version they have
+html = html.replace('__BUILT__', datetime.date.today().strftime('%b %-d, %Y'))
 
 head = '''<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
