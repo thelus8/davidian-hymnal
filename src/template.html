@@ -194,6 +194,25 @@ svg.i { width: 20px; height: 20px; flex: none; }
 .chip { display: inline-flex; align-items: center; gap: 6px; font: 500 .8rem var(--ui); color: var(--muted); background: var(--surface-2); border-radius: 999px; padding: 6px 12px; }
 .chip svg { width: 14px; height: 14px; }
 .acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+/* On a phone the hymn's actions move from the header into a ⋯ menu in the top bar. */
+.more-btn { display: none; }
+.act-menu {
+  position: absolute; top: calc(100% + 6px); right: max(12px, env(safe-area-inset-right, 0px)); z-index: 6; min-width: 220px;
+  display: grid; padding: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .22); animation: rise .18s cubic-bezier(.2, .8, .2, 1); transform-origin: top right;
+}
+.act-menu button {
+  display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 12px; border: 0; border-radius: 10px;
+  background: none; font: 500 .95rem var(--ui); color: var(--ink); text-align: left;
+}
+.act-menu button svg { width: 19px; height: 19px; flex: none; color: var(--muted); }
+.act-menu button:active { background: var(--surface-2); }
+.act-menu button[aria-pressed="true"], .act-menu button[aria-pressed="true"] svg { color: var(--accent); }
+.act-menu button[aria-pressed="true"] .fill { fill: currentColor; }
+@media (max-width: 599px) {
+  .song .acts { display: none; }
+  .more-btn { display: inline-grid; }
+}
 
 .stanzas { display: grid; gap: 24px; max-width: 40em; margin-inline: auto; text-align: center; }
 .stanza { font: 400 var(--lyric-size)/1.55 var(--lyric); }
@@ -430,7 +449,11 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
       <button class="round" data-contents aria-label="All hymns">
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/></svg>
       </button>
+      <button class="round more-btn" id="moreBtn" aria-label="More actions" aria-haspopup="menu" aria-expanded="false" aria-controls="actMenu">
+        <svg class="i" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>
+      </button>
     </div>
+    <div class="act-menu" id="actMenu" role="menu" hidden></div>
   </div>
   <article class="wrap song" id="song"></article>
 </div>
@@ -872,6 +895,13 @@ function render(n) {
   current = n;
   const svcNext = svcPos >= 0 ? song(service[svcPos + 1]) : null;
   $('topLabel').innerHTML = `No. ${s.n}<small>${esc(s.title)}</small>`;
+  const acts = `
+    <button data-act="fav" aria-pressed="${favs.has(n)}">${icons.star}${favs.has(n) ? 'Favorite' : 'Add to favorites'}</button>
+    <button data-act="svc" aria-pressed="${inService}">${inService ? icons.check + 'In service' : icons.list + 'Add to service'}</button>
+    ${hasChorus ? `<button data-act="repeat" aria-pressed="${repeatChorus}">${icons.repeat}Repeat chorus</button>` : ''}
+    <button data-act="present">${icons.screen}Present</button>`;
+  $('actMenu').hidden = true;
+  $('actMenu').innerHTML = acts.replace(/<button/g, '<button role="menuitem"');
   $('song').innerHTML = `
     ${svcPos >= 0 ? `<div class="svc-strip">
       <span>Service · ${svcPos + 1} of ${service.length}${svcNext ? ` · Next: No. ${svcNext.n}` : ''}</span>
@@ -885,12 +915,7 @@ function render(n) {
         ${s.ref ? `<span class="chip">${icons.book}${esc(s.ref)}</span>` : ''}
         ${s.tune ? `<span class="chip">${icons.note}${esc(s.tune)}</span>` : ''}
       </div>
-      <div class="acts">
-        <button class="pill" data-act="fav" aria-pressed="${favs.has(n)}">${icons.star}Favorite</button>
-        <button class="pill" data-act="svc" aria-pressed="${inService}">${inService ? icons.check + 'In service' : icons.list + 'Add to service'}</button>
-        ${hasChorus ? `<button class="pill" data-act="repeat" aria-pressed="${repeatChorus}">${icons.repeat}Repeat chorus</button>` : ''}
-        <button class="pill" data-act="present">${icons.screen}Present</button>
-      </div>
+      <div class="acts">${acts.replace(/<button/g, '<button class="pill"')}</div>
     </header>
     <div class="stanzas">
       ${sections.map(sec => sec.label === 'Chorus'
@@ -904,23 +929,33 @@ function render(n) {
     <p class="hint">Swipe left or right to change hymn · The screen stays on while a hymn is open</p>`;
 }
 
+const menuOpen = on => { $('actMenu').hidden = !on; $('moreBtn').setAttribute('aria-expanded', on); };
+$('moreBtn').onclick = e => { e.stopPropagation(); menuOpen($('actMenu').hidden); };
+document.addEventListener('click', e => { if (!e.target.closest('#actMenu')) menuOpen(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') menuOpen(false); });
+addEventListener('scroll', () => menuOpen(false), { passive: true });
+$('actMenu').addEventListener('click', e => { const a = e.target.closest('[data-act]'); if (a) { menuOpen(false); doAct(a.dataset.act); } });
+
 $('song').addEventListener('click', e => {
   const a = e.target.closest('[data-act]'), st = e.target.closest('[data-svc-step]');
   if (st) { stepService(+st.dataset.svcStep); return; }
-  if (!a) return;
+  if (a) doAct(a.dataset.act);
+});
+
+function doAct(act) {
   const n = current;
-  if (a.dataset.act === 'fav') {
+  if (act === 'fav') {
     favs.has(n) ? favs.delete(n) : favs.add(n);
     saveFavs(); toast(favs.has(n) ? `No. ${n} added to favorites` : `No. ${n} removed from favorites`);
   }
-  if (a.dataset.act === 'svc') {
+  if (act === 'svc') {
     if (service.includes(n)) { setService(service.filter(x => x !== n)); toast(`No. ${n} removed from the service list`); if (svcPos >= 0) svcPos = -1; }
     else { setService([...service, n]); toast(`No. ${n} added to the service list (${service.length})`); }
   }
-  if (a.dataset.act === 'repeat') { repeatChorus = !repeatChorus; store.set('repeat', repeatChorus ? '1' : '0'); }
-  if (a.dataset.act === 'present') { present(svcPos >= 0 ? service.slice(svcPos) : [n]); return; }
+  if (act === 'repeat') { repeatChorus = !repeatChorus; store.set('repeat', repeatChorus ? '1' : '0'); }
+  if (act === 'present') { present(svcPos >= 0 ? service.slice(svcPos) : [n]); return; }
   const y = window.scrollY; render(n); window.scrollTo(0, y);
-});
+}
 
 document.addEventListener('click', e => {
   const b = e.target.closest('.tile, .row, .fav, .pager button, .toc button, #continue');
@@ -1102,7 +1137,7 @@ const TOUR = [
   { target: () => $('q').parentElement, title: 'Search', body: '<p>Type a title, a hymn number, or a line you remember, like <i>“four winds”</i>.</p>' },
   { target: () => document.querySelector('#home [data-pad]'), title: 'Number keypad', body: '<p>When someone calls out a hymn number, tap here and type it, like a church hymn board.</p>' },
   { target: () => document.querySelector('#home [data-contents]'), title: 'All hymns', body: '<p>Every title, by number or A to Z, plus your favorites. You can also switch between light and dark here.</p>' },
-  { title: 'Inside a hymn', body: `<p>At the top of each hymn you’ll find:</p><ul>
+  { title: 'Inside a hymn', body: `<p>At the top of each hymn (under <b>⋯</b> on a phone) you’ll find:</p><ul>
       <li><b>Favorite</b><span>keeps it on your home screen</span></li>
       <li><b>Add to service</b><span>builds a list for a service you can share</span></li>
       <li><b>Repeat chorus</b><span>shows the chorus after every verse</span></li>
