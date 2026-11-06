@@ -2,6 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+<script>try { const p = localStorage.getItem('palette'); if (p) document.documentElement.dataset.palette = p; } catch {}</script>
 <style>
 /* Layout: an app shell. Cover card + frosted search bar over a numeral grid; side sheets list every hymn and the
    service list; the reader is one calm column with chorus cards; presentation mode is a full-screen slide stage. */
@@ -42,6 +43,27 @@
   --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
   color-scheme: dark;
 }
+/* Other themes, picked under All hymns > Theme. Each sets its own colors for day and dark, and its own fonts
+   (loaded only when picked; the service worker keeps them for offline use). Rose and plum above is the default. */
+:root[data-palette="gold"] { --display: 'Cormorant Garamond', Georgia, serif; --lyric: 'EB Garamond', Georgia, serif; --stage-accent: #e0b45c;
+  --bg: #f6f0e4; --surface: #fffaf0; --surface-2: #ece3d0; --ink: #2b2117; --muted: #7a6a55; --accent: #9a6b12; --accent-soft: rgba(154, 107, 18, 0.09); --glow: rgba(154, 107, 18, 0.09); --glass: rgba(246, 240, 228, 0.74); }
+@media (prefers-color-scheme: dark) { :root[data-palette="gold"]:not([data-theme="light"]) { --bg: #17120c; --surface: #201910; --surface-2: #2a2116; --ink: #f1e6d2; --muted: #b3a184; --accent: #e0b45c; --accent-soft: rgba(224, 180, 92, 0.12); --glow: rgba(224, 180, 92, 0.12); --glass: rgba(23, 18, 12, 0.72); } }
+:root[data-palette="gold"][data-theme="dark"] { --bg: #17120c; --surface: #201910; --surface-2: #2a2116; --ink: #f1e6d2; --muted: #b3a184; --accent: #e0b45c; --accent-soft: rgba(224, 180, 92, 0.12); --glow: rgba(224, 180, 92, 0.12); --glass: rgba(23, 18, 12, 0.72); }
+:root[data-palette="purple"] { --display: 'Fraunces', Georgia, serif; --lyric: 'Literata', Georgia, serif; --stage-accent: #b49cff;
+  --bg: #f7f5fc; --surface: #ffffff; --surface-2: #ebe6f7; --ink: #1b1533; --muted: #6b6488; --accent: #5b2fb5; --accent-soft: rgba(91, 47, 181, 0.09); --glow: rgba(91, 47, 181, 0.09); --glass: rgba(247, 245, 252, 0.74); }
+@media (prefers-color-scheme: dark) { :root[data-palette="purple"]:not([data-theme="light"]) { --bg: #0f0c1d; --surface: #181429; --surface-2: #221c3d; --ink: #ede9fb; --muted: #a39cc4; --accent: #b49cff; --accent-soft: rgba(180, 156, 255, 0.12); --glow: rgba(180, 156, 255, 0.12); --glass: rgba(15, 12, 29, 0.72); } }
+:root[data-palette="purple"][data-theme="dark"] { --bg: #0f0c1d; --surface: #181429; --surface-2: #221c3d; --ink: #ede9fb; --muted: #a39cc4; --accent: #b49cff; --accent-soft: rgba(180, 156, 255, 0.12); --glow: rgba(180, 156, 255, 0.12); --glass: rgba(15, 12, 29, 0.72); }
+:root[data-palette="olive"] { --display: 'Playfair Display', Georgia, serif; --lyric: 'Lora', Georgia, serif; --stage-accent: #a9c97a;
+  --bg: #f3f4ee; --surface: #fcfdf8; --surface-2: #e4e8db; --ink: #1e2519; --muted: #66705b; --accent: #4d6b2a; --accent-soft: rgba(77, 107, 42, 0.09); --glow: rgba(77, 107, 42, 0.09); --glass: rgba(243, 244, 238, 0.74); }
+@media (prefers-color-scheme: dark) { :root[data-palette="olive"]:not([data-theme="light"]) { --bg: #0f130d; --surface: #171d14; --surface-2: #1f271b; --ink: #e9eee1; --muted: #9ea993; --accent: #a9c97a; --accent-soft: rgba(169, 201, 122, 0.12); --glow: rgba(169, 201, 122, 0.12); --glass: rgba(15, 19, 13, 0.72); } }
+:root[data-palette="olive"][data-theme="dark"] { --bg: #0f130d; --surface: #171d14; --surface-2: #1f271b; --ink: #e9eee1; --muted: #9ea993; --accent: #a9c97a; --accent-soft: rgba(169, 201, 122, 0.12); --glow: rgba(169, 201, 122, 0.12); --glass: rgba(15, 19, 13, 0.72); }
+:root[data-palette="midnight"] { --display: 'DM Serif Display', Georgia, serif; --lyric: 'Source Serif 4', Georgia, serif; --stage-accent: #f2c46d;
+  --bg: #f4f7fa; --surface: #ffffff; --surface-2: #e3ebf3; --ink: #102031; --muted: #5d6e80; --accent: #1f5f99; --accent-soft: rgba(31, 95, 153, 0.09); --glow: rgba(31, 95, 153, 0.09); --glass: rgba(244, 247, 250, 0.74); }
+@media (prefers-color-scheme: dark) { :root[data-palette="midnight"]:not([data-theme="light"]) { --bg: #0a1220; --surface: #111b2e; --surface-2: #18243d; --ink: #e6eef8; --muted: #93a4ba; --accent: #f2c46d; --accent-soft: rgba(242, 196, 109, 0.12); --glow: rgba(242, 196, 109, 0.12); --glass: rgba(10, 18, 32, 0.72); } }
+:root[data-palette="midnight"][data-theme="dark"] { --bg: #0a1220; --surface: #111b2e; --surface-2: #18243d; --ink: #e6eef8; --muted: #93a4ba; --accent: #f2c46d; --accent-soft: rgba(242, 196, 109, 0.12); --glow: rgba(242, 196, 109, 0.12); --glass: rgba(10, 18, 32, 0.72); }
+.swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+.swatch { width: 34px; height: 34px; border-radius: 50%; border: 0; padding: 0; position: relative; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12); }
+.swatch[aria-pressed="true"]::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid var(--accent); }
 [hidden] { display: none !important; }
 /* The app itself never zooms like a canvas; pinching inside a hymn changes the text size instead (see Reader). */
 html { background: var(--bg); touch-action: pan-x pan-y; }
@@ -492,6 +514,10 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
   <div class="sheet-help"><button class="linkbtn" id="tourAgain">How to use the Hymnal</button>
     <span class="update-row" id="updateRow" hidden><span>Version __BUILT__</span><button class="linkbtn" id="checkUpdate">Check for updates</button></span></div>
   <div class="sheet-foot" style="border-top: 0">
+    <span>Theme <b id="themeName" style="color: var(--ink); font-weight: 500"></b></span>
+    <div class="swatches" id="swatches" role="group" aria-label="Theme"></div>
+  </div>
+  <div class="sheet-foot" style="border-top: 0; padding-top: 0">
     <span>Appearance</span>
     <div class="seg" role="group" aria-label="Appearance">
       <button data-theme-pick="system" aria-pressed="true">Auto</button>
@@ -616,6 +642,29 @@ function applyTheme(pick) {
 const savedTheme = store.get('theme');
 if (savedTheme) applyTheme(savedTheme);
 document.querySelectorAll('[data-theme-pick]').forEach(b => b.onclick = () => { applyTheme(b.dataset.themePick); store.set('theme', b.dataset.themePick); });
+
+const PALETTES = {
+  rose: { name: 'Rose and plum', swatch: '#b0194a', day: '#f8f6fb', night: '#0e0a12' },
+  gold: { name: 'Parchment and gold', swatch: '#9a6b12', day: '#f6f0e4', night: '#17120c', fonts: 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=EB+Garamond:ital@0;1&display=swap' },
+  purple: { name: 'Royal purple', swatch: '#5b2fb5', day: '#f7f5fc', night: '#0f0c1d', fonts: 'https://fonts.googleapis.com/css2?family=Fraunces:ital@0;1&family=Literata:ital@0;1&display=swap' },
+  olive: { name: 'Olive grove', swatch: '#4d6b2a', day: '#f3f4ee', night: '#0f130d', fonts: 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&family=Lora:ital@0;1&display=swap' },
+  midnight: { name: 'Midnight and gold', swatch: '#f2c46d', day: '#f4f7fa', night: '#0a1220', fonts: 'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Source+Serif+4:ital@0;1&display=swap' },
+};
+function applyPalette(key) {
+  const p = PALETTES[key] ? key : 'rose', t = PALETTES[p];
+  if (p === 'rose') delete document.documentElement.dataset.palette; else document.documentElement.dataset.palette = p;
+  if (t.fonts && !document.querySelector(`link[href="${t.fonts}"]`)) document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: t.fonts }));
+  // the phone's status bar follows the theme too
+  const [day, night] = document.querySelectorAll('meta[name="theme-color"]');
+  if (day) day.content = t.day;
+  if (night) night.content = t.night;
+  $('themeName').textContent = t.name;
+  document.querySelectorAll('[data-palette-pick]').forEach(b => b.setAttribute('aria-pressed', b.dataset.palettePick === p));
+}
+$('swatches').innerHTML = Object.entries(PALETTES).map(([k, t]) =>
+  `<button class="swatch" data-palette-pick="${k}" aria-label="${t.name}" title="${t.name}" style="background: linear-gradient(135deg, ${t.day} 50%, ${t.swatch} 50%)"></button>`).join('');
+document.querySelectorAll('[data-palette-pick]').forEach(b => b.onclick = () => { applyPalette(b.dataset.palettePick); store.set('palette', b.dataset.palettePick); });
+applyPalette(store.get('palette'));
 
 /* ---------- Keep the screen on while a hymn is open ---------- */
 let wakeLock = null;
