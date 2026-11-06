@@ -1,0 +1,13 @@
+# Netlify serves the built app as-is from the repo root (no build step; run src/build.py before deploying).
+[build]
+  publish = "."
+
+# Phones must always re-check the offline helper and page, so updates arrive promptly
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
