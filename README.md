@@ -2,7 +2,10 @@
 
 All 51 Davidian songs as a web app you can install on your phone and use offline.
 
-**Open it:** https://thelus8.github.io/davidian-hymnal/
+**Open it:** https://davidianhymns.netlify.app/
+
+The old address, https://thelus8.github.io/davidian-hymnal/, still works: it sends people to the new one and
+brings their favorites, service list and settings along (see the script at the top of `src/template.html`).
 
 - **iPhone:** open the link in Safari, tap Share, then **Add to Home Screen**.
 - **Android:** open the link in Chrome, tap ⋮, then **Install app**.
@@ -53,6 +56,9 @@ The site at the top of this repository (`index.html`, `sw.js`, `manifest.webmani
    python3 src/build.py
    ```
 
-3. Commit and push. GitHub Pages republishes in about a minute, and installed copies update the next time they're opened online.
+3. Commit and push, then deploy the repo folder to the Netlify project **davidianhymns** (`netlify deploy --prod` from the
+   repo root, or drag the folder onto the project's Deploys page). `netlify.toml` publishes the root as-is. Pushing also
+   keeps the old GitHub Pages address current, so its redirect keeps working. Installed copies update the next time
+   they're opened online.
 
 You can also do step 1 straight on github.com: open `src/songs.json`, click the pencil icon, and commit. Then rebuild on a computer before the change shows up in the app.

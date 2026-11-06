@@ -2,7 +2,32 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
-<script>try { const p = localStorage.getItem('palette'); if (p) document.documentElement.dataset.palette = p; } catch {}</script>
+<script>
+// The Hymnal moved from thelus8.github.io/davidian-hymnal to davidianhymns.netlify.app. Copies opened at the old
+// address go to the new one, bringing favorites, the service list and settings along in the link.
+const NEW_HOME = 'https://davidianhymns.netlify.app/';
+const CARRY = ['favs', 'service', 'theme', 'palette', 'lyricSize', 'layout', 'repeat', 'sort', 'presBg', 'presSize', 'toured', 'last'];
+try {
+  if (location.hostname.endsWith('github.io')) {
+    const data = {};
+    CARRY.forEach(k => { const v = localStorage.getItem(k); if (v != null) data[k] = v; });
+    const song = /^#h\d+$/.test(location.hash) ? location.hash : '';
+    location.replace(NEW_HOME + (Object.keys(data).length ? '#move=' + encodeURIComponent(JSON.stringify(data)) : song));
+  } else if (location.hash.startsWith('#move=')) {
+    const data = JSON.parse(decodeURIComponent(location.hash.slice(6)));
+    CARRY.forEach(k => {
+      if (data[k] == null) return;
+      if (k === 'favs') {
+        const mine = JSON.parse(localStorage.getItem('favs') || '[]');
+        localStorage.setItem('favs', JSON.stringify([...new Set([...mine, ...JSON.parse(data.favs)])]));
+      } else if (localStorage.getItem(k) == null) localStorage.setItem(k, data[k]);
+    });
+    sessionStorage.setItem('moved', '1');
+    history.replaceState(null, '', location.pathname);
+  }
+} catch {}
+try { const p = localStorage.getItem('palette'); if (p) document.documentElement.dataset.palette = p; } catch {}
+</script>
 <style>
 /* Layout: an app shell. Cover card + frosted search bar over a numeral grid; side sheets list every hymn and the
    service list; the reader is one calm column with chorus cards; presentation mode is a full-screen slide stage. */
@@ -1437,5 +1462,6 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:' && document.qu
 }
 try {
   if (sessionStorage.getItem('justUpdated')) { sessionStorage.removeItem('justUpdated'); toast('Updated to the newest version'); }
+  if (sessionStorage.getItem('moved')) { sessionStorage.removeItem('moved'); toast('The Hymnal has a new address. Your favorites came along.'); }
 } catch {}
 </script>
