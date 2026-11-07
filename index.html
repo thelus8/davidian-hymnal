@@ -61,7 +61,7 @@ try { const p = localStorage.getItem('palette'); if (p) document.documentElement
   --display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
   --lyric: "Newsreader", "Iowan Old Style", Georgia, serif;
   --ui: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  --lyric-size: 1.3rem;
+  --lyric-size: 1.5rem;
   --radius: 18px;
 }
 @media (prefers-color-scheme: dark) {
@@ -989,9 +989,9 @@ $('sharedYes').onclick = () => { setService(pendingShared); $('shared').hidden =
 $('sharedNo').onclick = () => { $('shared').hidden = true; };
 
 /* ---------- Reader ---------- */
-// Hymn text is never smaller than 18px (1.125rem); sizes saved before that limit are raised to it.
-const MIN_SIZE = 1.125, MAX_SIZE = 2.4;
-let size = Math.max(MIN_SIZE, parseFloat(store.get('lyricSize')) || 1.3);
+// Hymn text is never smaller than 24px (1.5rem), which is also where it starts; smaller saved sizes are raised to it.
+const MIN_SIZE = 1.5, MAX_SIZE = 2.4;
+let size = Math.max(MIN_SIZE, parseFloat(store.get('lyricSize')) || MIN_SIZE);
 const applySize = () => document.documentElement.style.setProperty('--lyric-size', size + 'rem');
 applySize();
 let sizeTimer = 0;
