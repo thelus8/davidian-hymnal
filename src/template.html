@@ -222,9 +222,16 @@ svg.i { width: 20px; height: 20px; flex: none; }
 /* ---------- Reader ---------- */
 .reader-bar .label { flex: 1; min-width: 0; text-align: center; font: 600 .9rem var(--ui); font-variant-numeric: tabular-nums; }
 .reader-bar .label small { display: block; font: 400 .75rem var(--ui); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sizer { display: inline-flex; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; height: 44px; flex: none; }
+.sizer { position: relative; display: inline-flex; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; height: 44px; flex: none; }
 .sizer button { border: 0; background: none; width: 40px; font: 600 .82rem var(--ui); }
 .sizer button + button { border-left: 1px solid var(--line); font-size: 1rem; }
+/* While the size changes, the current size shows over the A A buttons (taps still reach the buttons underneath) */
+.size-num {
+  position: absolute; inset: -1px; border-radius: 999px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center;
+  font: 600 .95rem var(--ui); font-variant-numeric: tabular-nums; opacity: 0; pointer-events: none; transition: opacity .25s;
+}
+.size-num small { font-size: .62rem; font-weight: 500; opacity: .8; margin-left: 3px; }
+.sizer.showing .size-num { opacity: 1; transition: none; }
 
 .song { padding-block: 22px 40px; }
 .svc-strip {
@@ -521,7 +528,7 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
       <div class="label" id="topLabel"></div>
-      <div class="sizer"><button id="smaller" aria-label="Smaller text">A</button><button id="bigger" aria-label="Larger text">A</button></div>
+      <div class="sizer"><button id="smaller" aria-label="Smaller text">A</button><button id="bigger" aria-label="Larger text">A</button><span class="size-num" id="sizeNum" aria-live="polite"></span></div>
       <button class="round" data-contents aria-label="All hymns">
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/></svg>
       </button>
@@ -975,8 +982,16 @@ const MIN_SIZE = 1.125, MAX_SIZE = 2.4;
 let size = Math.max(MIN_SIZE, parseFloat(store.get('lyricSize')) || 1.3);
 const applySize = () => document.documentElement.style.setProperty('--lyric-size', size + 'rem');
 applySize();
-$('smaller').onclick = () => { size = Math.max(MIN_SIZE, +(size - .1).toFixed(2)); applySize(); store.set('lyricSize', size); };
-$('bigger').onclick = () => { size = Math.min(MAX_SIZE, +(size + .1).toFixed(2)); applySize(); store.set('lyricSize', size); };
+let sizeTimer = 0;
+function showSize() {
+  const px = Math.round(size * 16);
+  $('sizeNum').innerHTML = px + (size <= MIN_SIZE ? '<small>min</small>' : size >= MAX_SIZE ? '<small>max</small>' : '');
+  $('sizeNum').parentElement.classList.add('showing');
+  clearTimeout(sizeTimer);
+  sizeTimer = setTimeout(() => $('sizeNum').parentElement.classList.remove('showing'), 1200);
+}
+$('smaller').onclick = () => { size = Math.max(MIN_SIZE, +(size - .1).toFixed(2)); applySize(); store.set('lyricSize', size); showSize(); };
+$('bigger').onclick = () => { size = Math.min(MAX_SIZE, +(size + .1).toFixed(2)); applySize(); store.set('lyricSize', size); showSize(); };
 
 // Pinching with two fingers in a hymn resizes the text, within the same limits as the A buttons.
 addEventListener('gesturestart', e => e.preventDefault());   // iOS would otherwise zoom the whole page
@@ -989,7 +1004,7 @@ addEventListener('gesturestart', e => e.preventDefault());   // iOS would otherw
     if (!pinch || e.touches.length !== 2) return;
     e.preventDefault();
     const next = Math.min(MAX_SIZE, Math.max(MIN_SIZE, +(pinch.size * gap(e.touches) / pinch.d).toFixed(2)));
-    if (next !== size) { size = next; applySize(); }
+    if (next !== size) { size = next; applySize(); showSize(); }
   }, { passive: false });
   rd.addEventListener('touchend', e => { if (pinch && e.touches.length < 2) { pinch = null; store.set('lyricSize', size); } });
 }
