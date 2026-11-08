@@ -15,16 +15,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
 <script>
-// The Hymnal moved from thelus8.github.io/davidian-hymnal to davidianhymnal.netlify.app. Copies opened at the old
-// address go to the new one, bringing favorites, the service list and settings along in the link.
-const NEW_HOME = 'https://davidianhymnal.netlify.app/';
+// The Hymnal lives at thelus8.github.io/davidian-hymnal. It spent a few days at davidianhymnal.netlify.app; copies
+// opened there come back here, bringing favorites, the service list and settings along in the link.
+const HOME = 'https://thelus8.github.io/davidian-hymnal/';
 const CARRY = ['favs', 'service', 'theme', 'palette', 'lyricSize', 'layout', 'repeat', 'sort', 'presBg', 'presSize', 'toured', 'last'];
 try {
-  if (location.hostname.endsWith('github.io')) {
+  if (location.hostname.endsWith('netlify.app')) {
     const data = {};
     CARRY.forEach(k => { const v = localStorage.getItem(k); if (v != null) data[k] = v; });
     const song = /^#h\d+$/.test(location.hash) ? location.hash : '';
-    location.replace(NEW_HOME + (Object.keys(data).length ? '#move=' + encodeURIComponent(JSON.stringify(data)) : song));
+    location.replace(HOME + (Object.keys(data).length ? '#move=' + encodeURIComponent(JSON.stringify(data)) : song));
   } else if (location.hash.startsWith('#move=')) {
     const data = JSON.parse(decodeURIComponent(location.hash.slice(6)));
     CARRY.forEach(k => {
@@ -32,7 +32,7 @@ try {
       if (k === 'favs') {
         const mine = JSON.parse(localStorage.getItem('favs') || '[]');
         localStorage.setItem('favs', JSON.stringify([...new Set([...mine, ...JSON.parse(data.favs)])]));
-      } else if (localStorage.getItem(k) == null) localStorage.setItem(k, data[k]);
+      } else localStorage.setItem(k, data[k]);   // the copy being left behind is the one used most recently
     });
     sessionStorage.setItem('moved', '1');
     history.replaceState(null, '', location.pathname);
@@ -599,7 +599,7 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
   </div>
   <ul class="toc" id="toc" tabindex="-1" autofocus></ul>
   <div class="sheet-help"><button class="linkbtn" id="tourAgain">How to use the Hymnal</button>
-    <span class="update-row" id="updateRow" hidden><span>Version Nov 7, 2026</span><button class="linkbtn" id="checkUpdate">Check for updates</button></span></div>
+    <span class="update-row" id="updateRow" hidden><span>Version Nov 8, 2026</span><button class="linkbtn" id="checkUpdate">Check for updates</button></span></div>
   <div class="sheet-foot" style="border-top: 0">
     <span>Theme <b id="themeName" style="color: var(--ink); font-weight: 500"></b></span>
     <div class="swatches" id="swatches" role="group" aria-label="Theme"></div>

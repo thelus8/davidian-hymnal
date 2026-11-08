@@ -2,10 +2,10 @@
 
 All 51 Davidian songs as a web app you can install on your phone and use offline.
 
-**Open it:** https://davidianhymnal.netlify.app/
+**Open it:** https://thelus8.github.io/davidian-hymnal/
 
-The old address, https://thelus8.github.io/davidian-hymnal/, still works: it sends people to the new one and
-brings their favorites, service list and settings along (see the script at the top of `src/template.html`).
+For a few days in November 2026 it was at https://davidianhymnal.netlify.app/. That Netlify project now only forwards
+people back here with their favorites, service list and settings (see the script at the top of `src/template.html`).
 
 - **iPhone:** open the link in Safari, tap Share, then **Add to Home Screen**.
 - **Android:** open the link in Chrome, tap ⋮, then **Install app**.
@@ -56,9 +56,7 @@ The site at the top of this repository (`index.html`, `sw.js`, `manifest.webmani
    python3 src/build.py
    ```
 
-3. Commit and push, then deploy the repo folder to the Netlify project **davidianhymnal** (`netlify deploy --prod` from the
-   repo root, or drag the folder onto the project's Deploys page). `netlify.toml` publishes the root as-is. Pushing also
-   keeps the old GitHub Pages address current, so its redirect keeps working. Installed copies update the next time
-   they're opened online.
+3. Commit and push. GitHub Pages republishes in about a minute, and installed copies update the next time they're
+   opened online. (The Netlify project needs a redeploy only if the forwarding script changes.)
 
 You can also do step 1 straight on github.com: open `src/songs.json`, click the pencil icon, and commit. Then rebuild on a computer before the change shows up in the app.
