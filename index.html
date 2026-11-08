@@ -234,16 +234,28 @@ svg.i { width: 20px; height: 20px; flex: none; }
 /* ---------- Reader ---------- */
 .reader-bar .label { flex: 1; min-width: 0; text-align: center; font: 600 .9rem var(--ui); font-variant-numeric: tabular-nums; }
 .reader-bar .label small { display: block; font: 400 .75rem var(--ui); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sizer { position: relative; display: inline-flex; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; height: 44px; flex: none; }
-.sizer button { border: 0; background: none; width: 40px; font: 600 .82rem var(--ui); }
-.sizer button + button { border-left: 1px solid var(--line); font-size: 1rem; }
-/* While the size changes, the current size shows over the A A buttons (taps still reach the buttons underneath) */
+.size-btn { position: relative; font: 600 1.05rem var(--ui); letter-spacing: -.02em; }
+.size-btn small { font-size: .72rem; }
+/* While pinching, the current size shows over the Aa button */
 .size-num {
-  position: absolute; inset: -1px; border-radius: 999px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center;
+  position: absolute; inset: -1px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center;
   font: 600 .95rem var(--ui); font-variant-numeric: tabular-nums; opacity: 0; pointer-events: none; transition: opacity .25s;
 }
-.size-num small { font-size: .62rem; font-weight: 500; opacity: .8; margin-left: 3px; }
-.sizer.showing .size-num { opacity: 1; transition: none; }
+.size-btn.showing .size-num { opacity: 1; transition: none; }
+/* Text size panel: a slider from 24 to 38 with the size shown large above it */
+.size-pop {
+  position: absolute; top: calc(100% + 6px); right: max(12px, env(safe-area-inset-right, 0px)); z-index: 6;
+  width: min(340px, calc(100vw - 24px)); box-sizing: border-box; padding: 14px 16px 16px; border-radius: 18px;
+  background: var(--surface); border: 1px solid var(--line); box-shadow: 0 18px 50px rgba(0, 0, 0, .22);
+  animation: rise .18s cubic-bezier(.2, .8, .2, 1);
+}
+.size-pop .head { display: flex; align-items: baseline; justify-content: space-between; font: 500 .8rem var(--ui); color: var(--muted); }
+.size-pop output { font: 600 1.6rem var(--ui); font-variant-numeric: tabular-nums; color: var(--ink); }
+.size-pop output small { font-size: .7rem; font-weight: 500; color: var(--muted); margin-left: 4px; }
+.size-pop .size-row { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+.size-pop .size-row span { font: 600 .85rem var(--lyric); color: var(--muted); }
+.size-pop .size-row span + input + span { font-size: 1.5rem; }
+.size-pop input[type=range] { flex: 1; min-width: 0; height: 32px; accent-color: var(--accent); }
 
 .song { padding-block: 22px 40px; }
 .svc-strip {
@@ -540,7 +552,7 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
       <div class="label" id="topLabel"></div>
-      <div class="sizer"><button id="smaller" aria-label="Smaller text">A</button><button id="bigger" aria-label="Larger text">A</button><span class="size-num" id="sizeNum" aria-live="polite"></span></div>
+      <button class="round size-btn" id="sizeBtn" aria-label="Text size" aria-haspopup="dialog" aria-expanded="false" aria-controls="sizePop"><span aria-hidden="true">A<small>a</small></span><span class="size-num" id="sizeNum"></span></button>
       <button class="round" data-contents aria-label="All hymns">
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/></svg>
       </button>
@@ -549,6 +561,10 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
       </button>
     </div>
     <div class="act-menu" id="actMenu" role="menu" hidden></div>
+    <div class="size-pop" id="sizePop" role="dialog" aria-label="Text size" hidden>
+      <div class="head"><span>Text size</span><output id="sizeOut" for="sizeRange"></output></div>
+      <div class="size-row"><span aria-hidden="true">A</span><input type="range" id="sizeRange" min="24" max="38" step="1" aria-label="Text size"><span aria-hidden="true">A</span></div>
+    </div>
   </div>
   <article class="wrap song" id="song"></article>
 </div>
@@ -990,22 +1006,31 @@ $('sharedNo').onclick = () => { $('shared').hidden = true; };
 
 /* ---------- Reader ---------- */
 // Hymn text is never smaller than 24px (1.5rem), which is also where it starts; smaller saved sizes are raised to it.
-const MIN_SIZE = 1.5, MAX_SIZE = 2.4;
-let size = Math.max(MIN_SIZE, parseFloat(store.get('lyricSize')) || MIN_SIZE);
+const MIN_SIZE = 1.5, MAX_SIZE = 38 / 16;
+let size = Math.min(MAX_SIZE, Math.max(MIN_SIZE, parseFloat(store.get('lyricSize')) || MIN_SIZE));
 const applySize = () => document.documentElement.style.setProperty('--lyric-size', size + 'rem');
 applySize();
+// Tapping Aa opens a slider from 24 to 38; the size updates live as it moves.
+function renderSize() {
+  const px = Math.round(size * 16);
+  $('sizeRange').value = px;
+  $('sizeOut').innerHTML = px + (px <= 24 ? '<small>smallest</small>' : px >= 38 ? '<small>largest</small>' : '');
+}
+const sizeOpen = on => { $('sizePop').hidden = !on; $('sizeBtn').setAttribute('aria-expanded', on); if (on) renderSize(); };
+$('sizeBtn').onclick = e => { e.stopPropagation(); menuOpen(false); sizeOpen($('sizePop').hidden); };
+$('sizeRange').oninput = () => { size = +$('sizeRange').value / 16; applySize(); renderSize(); };
+$('sizeRange').onchange = () => store.set('lyricSize', size);
+document.addEventListener('click', e => { if (!e.target.closest('#sizePop')) sizeOpen(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') sizeOpen(false); });
 let sizeTimer = 0;
 function showSize() {
-  const px = Math.round(size * 16);
-  $('sizeNum').innerHTML = px + (size <= MIN_SIZE ? '<small>min</small>' : size >= MAX_SIZE ? '<small>max</small>' : '');
-  $('sizeNum').parentElement.classList.add('showing');
+  $('sizeNum').textContent = Math.round(size * 16);
+  $('sizeBtn').classList.add('showing');
   clearTimeout(sizeTimer);
-  sizeTimer = setTimeout(() => $('sizeNum').parentElement.classList.remove('showing'), 1200);
+  sizeTimer = setTimeout(() => $('sizeBtn').classList.remove('showing'), 1200);
 }
-$('smaller').onclick = () => { size = Math.max(MIN_SIZE, +(size - .1).toFixed(2)); applySize(); store.set('lyricSize', size); showSize(); };
-$('bigger').onclick = () => { size = Math.min(MAX_SIZE, +(size + .1).toFixed(2)); applySize(); store.set('lyricSize', size); showSize(); };
 
-// Pinching with two fingers in a hymn resizes the text, within the same limits as the A buttons.
+// Pinching with two fingers in a hymn resizes the text, within the same limits as the slider.
 addEventListener('gesturestart', e => e.preventDefault());   // iOS would otherwise zoom the whole page
 {
   let pinch = null;
@@ -1076,7 +1101,7 @@ function render(n) {
 }
 
 const menuOpen = on => { $('actMenu').hidden = !on; $('moreBtn').setAttribute('aria-expanded', on); };
-$('moreBtn').onclick = e => { e.stopPropagation(); menuOpen($('actMenu').hidden); };
+$('moreBtn').onclick = e => { e.stopPropagation(); sizeOpen(false); menuOpen($('actMenu').hidden); };
 document.addEventListener('click', e => { if (!e.target.closest('#actMenu')) menuOpen(false); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') menuOpen(false); });
 addEventListener('scroll', () => menuOpen(false), { passive: true });
