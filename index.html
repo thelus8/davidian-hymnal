@@ -456,7 +456,26 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
 .p-count { font-variant-numeric: tabular-nums; min-width: 4.5em; text-align: center; }
 /* Backgrounds: drawn scenes (SVG made in the script below, so they work offline) or a photo from the phone.
    A soft shade and text shadow keep the words readable on any of them. */
-.p-bg { position: absolute; inset: 0; z-index: -1; background: var(--stage) center / cover no-repeat; }
+.p-bg { position: absolute; inset: -5%; z-index: -1; background: var(--stage) center / cover no-repeat; }
+/* Motion: the background drifts slowly like a camera, and each slide's words fade up softly, line after line */
+#present { overflow: hidden; }
+#present.has-bg .p-bg { animation: drift 48s ease-in-out infinite alternate; }
+@keyframes drift { from { transform: scale(1) translate(0, 0); } to { transform: scale(1.09) translate(-2.5%, -1.5%); } }
+@keyframes p-in { from { opacity: 0; transform: translateY(.3em); filter: blur(10px); } }
+@keyframes p-num-in { from { opacity: 0; transform: scale(.7); filter: blur(12px); } }
+.p-fit { transition: opacity .2s, filter .2s; }
+.p-fit.out { opacity: 0; filter: blur(6px); }
+.p-fit.anim .p-label, .p-fit.anim .ln, .p-fit.anim .p-title, .p-fit.anim .p-meta { animation: p-in .9s cubic-bezier(.2, .7, .2, 1) both; }
+.p-fit.anim .ln { animation-delay: calc(var(--i, 0) * 110ms + 120ms); }
+.p-fit.anim .p-num { animation: p-num-in 1.1s cubic-bezier(.2, .7, .2, 1) both; }
+.p-fit.anim .p-title { animation-delay: .35s; }
+.p-fit.anim .p-meta { animation-delay: .7s; }
+/* the chorus glows warmly so the room knows it is the refrain */
+.p-fit.is-chorus .p-lines { color: #fff4e2; text-shadow: 0 0 .6em rgba(255, 196, 120, .35), 0 2px 18px rgba(0, 0, 0, .5); }
+.p-fit.is-chorus .p-label { color: #ffc98a; }
+@media (prefers-reduced-motion: reduce) {
+  #present.has-bg .p-bg, .p-fit.anim * { animation: none !important; }
+}
 .p-bg::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(0, 0, 0, .38), rgba(0, 0, 0, .2) 75%); opacity: 0; }
 #present.has-bg .p-bg::after { opacity: 1; }
 #present.has-bg .p-fit { text-shadow: 0 2px 18px rgba(0, 0, 0, .55), 0 1px 3px rgba(0, 0, 0, .5); }
@@ -483,6 +502,68 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
 .p-panel .seg button { color: rgba(246, 239, 248, .65); }
 .p-panel .seg button[aria-pressed="true"] { background: rgba(255, 255, 255, .16); color: #fff; box-shadow: none; }
 .p-panel small { font-weight: 400; color: rgba(246, 239, 248, .5); line-height: 1.4; }
+.p-bg { transition: opacity .6s; }
+#present.blank-black .p-bg { opacity: 0; }
+.p-kicker { font: 600 .3em var(--ui); letter-spacing: .3em; text-transform: uppercase; color: var(--stage-accent); }
+.p-fit.anim .p-kicker { animation: p-num-in 1.1s cubic-bezier(.2, .7, .2, 1) both; }
+.p-fit.anim .p-kicker { animation-delay: .2s; }
+
+/* Screen mode (a TV, a laptop on a projector, or a second window): only the slides, no buttons */
+#present.screen .p-top, #present.screen .p-bottom { display: none; }
+#present.screen .p-stage { padding: 4vh 6vw; cursor: none; }
+.p-wait { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; background: var(--stage); padding: 5vh 6vw; text-align: left; }
+.p-wait .in { display: flex; align-items: center; gap: 6vw; flex-wrap: wrap; justify-content: center; max-width: 1100px; }
+.p-wait .qr { width: min(34vh, 300px); aspect-ratio: 1; background: #fff; border-radius: 18px; padding: 16px; box-sizing: border-box; }
+.p-wait .qr svg { width: 100%; height: 100%; display: block; }
+.p-wait small { font: 600 .8rem var(--ui); letter-spacing: .2em; text-transform: uppercase; color: var(--stage-accent); }
+.p-wait .code { font: 600 min(16vh, 140px)/1 var(--ui); letter-spacing: .12em; margin: 8px 0 18px; font-variant-numeric: tabular-nums; }
+.p-wait p { font: 400 min(2.6vh, 1.15rem)/1.5 var(--ui); color: rgba(246, 239, 248, .75); max-width: 30em; margin: 0 0 8px; }
+.p-wait b { color: #fff; font-weight: 600; }
+
+/* Controller view on the leader's phone while the slides show on another screen */
+.p-ctrl { display: none; flex: 1; min-height: 0; overflow-y: auto; padding: 4px 18px 12px; box-sizing: border-box; width: 100%; max-width: 900px; margin-inline: auto; align-content: start; gap: 16px; }
+#present.ctrl .p-ctrl { display: grid; }
+#present.ctrl .p-stage, #present.ctrl .p-bg { display: none; }
+#present.ctrl .p-bottom .p-btn { width: 68px; height: 68px; }
+#present.ctrl .p-bottom .p-btn svg { width: 28px; height: 28px; }
+.ctl-status { display: flex; align-items: center; gap: 8px; font: 500 .82rem var(--ui); color: rgba(246, 239, 248, .7); }
+.ctl-status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #5bd18b; box-shadow: 0 0 0 4px rgba(91, 209, 139, .18); }
+.ctl-views { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 700px) { .ctl-views { grid-template-columns: 3fr 2fr; align-items: start; } }
+.ctl-h { font: 600 .68rem var(--ui); letter-spacing: .16em; text-transform: uppercase; color: rgba(246, 239, 248, .5); margin-bottom: 6px; }
+.mini {
+  position: relative; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: #0b0710 center / cover no-repeat; color: #fff;
+  display: grid; place-items: center; text-align: center; padding: 5% 7%; box-sizing: border-box; font: 400 13px/1.3 var(--lyric);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12);
+}
+.mini::before { content: ""; position: absolute; inset: 0; background: rgba(0, 0, 0, .3); }
+.mini > * { position: relative; }
+.mini.now { font-size: clamp(13px, 3.6vw, 20px); box-shadow: 0 0 0 2px var(--stage-accent); }
+.mini .p-num { font-size: 2.4em; } .mini .p-title { font-size: 1.4em; } .mini .p-meta { font-size: .7em; } .mini .p-label { font-size: .6em; margin-bottom: .4em; }
+.mini .ln { display: block; text-shadow: 0 1px 6px rgba(0, 0, 0, .6); }
+.mini.is-chorus .p-lines { color: #fff4e2; }
+.mini .p-kicker { font-size: .55em; }
+.mini-note { font: 500 .85rem var(--ui); color: rgba(246, 239, 248, .6); }
+.ctl-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.ctl-chips button {
+  height: 42px; min-width: 50px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .16);
+  background: rgba(255, 255, 255, .06); color: #fff; font: 600 .88rem var(--ui);
+}
+.ctl-chips button[aria-pressed="true"] { background: var(--stage-accent); border-color: transparent; color: #160d1b; }
+.remote-chip {
+  position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); transform: translateX(-50%); z-index: 40;
+  display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 16px; border-radius: 999px; background: var(--ink); color: var(--bg);
+  font: 500 .82rem var(--ui); box-shadow: 0 10px 30px rgba(0, 0, 0, .3); white-space: nowrap;
+}
+.remote-chip button { border: 0; border-radius: 999px; padding: 7px 12px; background: rgba(127, 127, 127, .25); color: inherit; font: 600 .78rem var(--ui); }
+.cast-code { display: flex; gap: 8px; }
+.cast-code input {
+  flex: 1; min-width: 0; height: 44px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, .18); background: rgba(255, 255, 255, .06);
+  color: #fff; font: 600 1.3rem var(--ui); letter-spacing: .3em; text-align: center;
+}
+.p-panel ol { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; font-weight: 400; line-height: 1.45; color: rgba(246, 239, 248, .8); }
+.p-panel ol b { color: #fff; font-weight: 600; }
+.p-panel p { margin: 0; font-weight: 400; color: rgba(246, 239, 248, .85); }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
@@ -572,6 +653,9 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
 <div id="present" hidden>
   <div class="p-top">
     <span id="pTitle"></span>
+    <button class="p-btn" id="pCast" aria-label="Show on a TV or projector" aria-expanded="false" aria-controls="pCastPanel">
+      <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+    </button>
     <button class="p-btn" id="pLook" aria-label="Background and text size" aria-expanded="false" aria-controls="pPanel">
       <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg>
     </button>
@@ -590,6 +674,43 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
     </div>
     <small>Large and Largest show fewer lines on each slide, so the words can be read from the back of the room.</small>
   </div>
+  <div class="p-panel" id="pCastPanel" hidden>
+    <h4>Show on a TV or projector</h4>
+    <div id="castOff" style="display: grid; gap: 10px">
+      <ol>
+        <li>On the TV, laptop or tablet that will show the words, open <b id="castUrl"></b>, open the All hymns menu and choose <b>Use this device as the screen</b>.</li>
+        <li>Scan the QR code on that screen with this phone's camera, or type its code here.</li>
+      </ol>
+      <div class="cast-code"><input id="castCode" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="Screen code" autocomplete="off"><button class="pill primary" id="castGo">Connect</button></div>
+      <button class="linkbtn" id="castWindow" style="justify-self: start; color: var(--stage-accent)">Or open a second window on this computer</button>
+      <small>Both devices need the internet to connect.</small>
+    </div>
+    <div id="castOn" hidden style="display: grid; gap: 10px">
+      <p id="castOnText"></p>
+      <button class="pill" id="castStop" style="justify-self: start">Disconnect</button>
+    </div>
+  </div>
+  <div class="p-wait" id="pWait" hidden>
+    <div class="in">
+      <div class="qr" id="pQr"></div>
+      <div>
+        <small>Screen code</small>
+        <div class="code" id="pWaitCode">····</div>
+        <p id="pWaitText">On your phone, open the Hymnal, start <b>Present</b> on a hymn, tap the <b>TV</b> button and enter this code. Or scan the QR code with the phone's camera.</p>
+        <p style="opacity: .6">Press Esc to leave screen mode.</p>
+      </div>
+    </div>
+  </div>
+  <div class="p-ctrl" id="pCtrl">
+    <div class="ctl-status" id="cStatus"></div>
+    <div class="ctl-views">
+      <div><div class="ctl-h">On screen now</div><div class="mini now" id="cNow"></div></div>
+      <div><div class="ctl-h">Next</div><div class="mini" id="cNext"></div></div>
+    </div>
+    <div><div class="ctl-h">Jump to</div><div class="ctl-chips" id="cParts"></div></div>
+    <div id="cSongsWrap"><div class="ctl-h">Hymns in this list</div><div class="ctl-chips" id="cSongs"></div></div>
+    <div><div class="ctl-h">Screen</div><div class="ctl-chips"><button id="cBlack" aria-pressed="false">Black screen</button><button id="cLogo" aria-pressed="false">Welcome screen</button></div></div>
+  </div>
   <div class="p-stage" id="pStage"><div class="p-fit" id="pFit"></div></div>
   <div class="p-bottom">
     <button class="p-btn" id="pPrev" aria-label="Previous slide"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
@@ -598,6 +719,8 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
     <button class="p-btn" id="pNext" aria-label="Next slide"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
   </div>
 </div>
+
+<div class="remote-chip" id="remoteChip" hidden><span id="remoteChipText"></span><button id="remoteChipStop">Disconnect</button></div>
 
 <dialog class="sheet" id="sheet" aria-labelledby="sheetTitle">
   <div class="sheet-head">
@@ -614,8 +737,8 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
     </div>
   </div>
   <ul class="toc" id="toc" tabindex="-1" autofocus></ul>
-  <div class="sheet-help"><button class="linkbtn" id="tourAgain">How to use the Hymnal</button>
-    <span class="update-row" id="updateRow" hidden><span>Version Nov 8, 2026</span><button class="linkbtn" id="checkUpdate">Check for updates</button></span></div>
+  <div class="sheet-help"><button class="linkbtn" id="tourAgain">How to use the Hymnal</button><button class="linkbtn" id="useScreen">Use this device as the screen</button>
+    <span class="update-row" id="updateRow" hidden><span>Version Nov 17, 2026</span><button class="linkbtn" id="checkUpdate">Check for updates</button></span></div>
   <div class="sheet-foot" style="border-top: 0">
     <span>Theme <b id="themeName" style="color: var(--ink); font-weight: 500"></b></span>
     <div class="swatches" id="swatches" role="group" aria-label="Theme"></div>
@@ -1208,6 +1331,24 @@ function fitSlide() {
   }
   box.style.fontSize = lo + 'px';
 }
+const slideHtml = sl => sl.kind === 'title'
+  ? `<div class="p-num">${sl.s.n}</div><div class="p-title">${esc(sl.s.title)}</div><div class="p-meta">${[sl.s.ref, sl.s.tune && 'Tune: ' + sl.s.tune].filter(Boolean).map(esc).join(' · ')}</div>`
+  : `<div class="p-label">${sl.kind === 'chorus' ? 'Chorus' : 'Verse ' + sl.sec.label}${sl.of ? ' · ' + sl.of : ''}</div><div class="p-lines${sl.kind === 'chorus' ? ' it' : ''}">${sl.part.map((l, k) => `<span class="ln" style="--i:${k}">${esc(l)}</span>`).join('')}</div>`;
+// Puts a slide (or the black / welcome screen) on this device's stage: the old words fade out, the new ones fade up.
+let stageToken = 0, stageKey = '';
+function showOnStage(html, key, chorus) {
+  if (key === stageKey) return;
+  stageKey = key;
+  const box = $('pFit'), token = ++stageToken, swap = () => {
+    if (token !== stageToken) return;
+    box.innerHTML = html;
+    box.classList.toggle('is-chorus', !!chorus);
+    fitSlide();
+    box.classList.remove('anim', 'out'); void box.offsetWidth; box.classList.add('anim');
+  };
+  if (box.innerHTML && !matchMedia('(prefers-reduced-motion: reduce)').matches) { box.classList.add('out'); setTimeout(swap, 200); }
+  else swap();
+}
 function renderSlide() {
   const { slides, i } = pres, sl = slides[i], s = sl.s;
   $('pTitle').textContent = `No. ${s.n} · ${s.title}`;
@@ -1215,29 +1356,41 @@ function renderSlide() {
   $('pBar').style.width = ((i + 1) / slides.length * 100) + '%';
   $('pPrev').disabled = i === 0;
   $('pNext').disabled = i === slides.length - 1;
-  $('pFit').innerHTML = sl.kind === 'title'
-    ? `<div class="p-num">${s.n}</div><div class="p-title">${esc(s.title)}</div><div class="p-meta">${[s.ref, s.tune && 'Tune: ' + s.tune].filter(Boolean).map(esc).join(' · ')}</div>`
-    : `<div class="p-label">${sl.kind === 'chorus' ? 'Chorus' : 'Verse ' + sl.sec.label}${sl.of ? ' · ' + sl.of : ''}</div><div class="p-lines${sl.kind === 'chorus' ? ' it' : ''}">${sl.part.map(l => `<span class="ln">${esc(l)}</span>`).join('')}</div>`;
-  fitSlide();
+  if (remote.role === 'leader') { renderLeader(); sendState(); return; }
+  showStage();
+}
+// What the stage shows: a blank screen when chosen, otherwise the current slide
+function showStage() {
+  $('present').classList.toggle('blank-black', pres.blank === 'black');
+  if (pres.blank === 'black') { showOnStage('', 'black'); return; }
+  if (pres.blank === 'logo' || !pres.slides.length) { showOnStage(logoHtml(), 'logo'); return; }
+  const sl = pres.slides[pres.i];
+  showOnStage(slideHtml(sl), `${presSize}|${pres.i}|${pres.list.join()}`, sl.kind === 'chorus');
 }
 function present(list) {
-  pres = { list, slides: list.flatMap(slidesFor), i: 0 };
+  pres = { list, slides: list.flatMap(slidesFor), i: 0, blank: null };
+  stageKey = '';
   applyBg();
   $('present').hidden = false;
-  document.documentElement.requestFullscreen?.().catch(() => {});
+  $('present').classList.toggle('ctrl', remote.role === 'leader');
+  renderCast();
+  if (remote.role !== 'leader') document.documentElement.requestFullscreen?.().catch(() => {});
   keepAwake(true);
   try { history.pushState({ ...(history.state || {}), present: true }, '', location.href); } catch {}
   renderSlide();
 }
 function endPresent(fromHistory) {
-  $('present').hidden = true; pres = null; showPanel(false);
+  $('present').hidden = true; pres = null; showPanel(false); showCast(false);
+  $('present').classList.remove('ctrl', 'blank-black'); $('pFit').innerHTML = ''; stageKey = '';
+  sendState(); renderCast();
   if (reloadWhenFree) { reloadForUpdate(); return; }
   if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
   if ($('reader').hidden) keepAwake(false);
   if (!fromHistory) { try { history.back(); } catch {} }
 }
 function slide(d) {
-  if (!pres) return;
+  if (!pres || remote.role === 'screen') return;
+  if (pres.blank) { pres.blank = null; renderSlide(); return; }   // the first tap after a black or welcome screen shows the words again
   const i = Math.max(0, Math.min(pres.slides.length - 1, pres.i + d));
   if (i !== pres.i) { pres.i = i; renderSlide(); }
 }
@@ -1245,7 +1398,8 @@ $('pClose').onclick = () => endPresent(false);
 $('pPrev').onclick = () => slide(-1);
 $('pNext').onclick = () => slide(1);
 $('pStage').addEventListener('click', e => {
-  if (!$('pPanel').hidden) { showPanel(false); return; }
+  if (remote.role === 'screen') { document.documentElement.requestFullscreen?.().catch(() => {}); return; }
+  if (!$('pPanel').hidden || !$('pCastPanel').hidden) { showPanel(false); showCast(false); return; }
   slide(e.clientX < innerWidth / 3 ? -1 : 1);
 });
 
@@ -1253,31 +1407,40 @@ $('pStage').addEventListener('click', e => {
 const svgUrl = svg => `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 const scene = (defs, body) => svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice"><defs>${defs}</defs>${body}</svg>`);
 const sky = (id, stops) => `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">${stops.map(([o, c]) => `<stop offset="${o}" stop-color="${c}"/>`).join('')}</linearGradient>`;
+// Scenes move gently: stars twinkle, light breathes, clouds and mist drift, wheat sways (SVG animation, no video needed)
 function stars(count, seed) {
   let x = seed, out = '';
   const rnd = () => (x = (x * 16807) % 2147483647) / 2147483647;
-  for (let i = 0; i < count; i++) out += `<circle cx="${(rnd() * 1600).toFixed(0)}" cy="${(rnd() * 760).toFixed(0)}" r="${(rnd() * 1.6 + .4).toFixed(1)}" fill="#fff" opacity="${(rnd() * .7 + .2).toFixed(2)}"/>`;
+  for (let i = 0; i < count; i++) {
+    const o = (rnd() * .7 + .2).toFixed(2), twinkle = i % 3 === 0
+      ? `<animate attributeName="opacity" values="${o};.08;${o}" dur="${(rnd() * 4 + 2).toFixed(1)}s" begin="${(rnd() * 5).toFixed(1)}s" repeatCount="indefinite"/>` : '';
+    out += `<circle cx="${(rnd() * 1600).toFixed(0)}" cy="${(rnd() * 760).toFixed(0)}" r="${(rnd() * 1.6 + .4).toFixed(1)}" fill="#fff" opacity="${o}">${twinkle}</circle>`;
+  }
   return out;
 }
+const breathe = (attr, values, dur) => `<animate attributeName="${attr}" values="${values}" dur="${dur}s" repeatCount="indefinite" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1" keyTimes="0;.5;1"/>`;
+const drift = (dx, dur) => `<animateTransform attributeName="transform" type="translate" values="0 0;${dx} 0;0 0" dur="${dur}s" repeatCount="indefinite" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1" keyTimes="0;.5;1"/>`;
+const SHOOTING = '<line x1="0" y1="0" x2="120" y2="40" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0"><animate attributeName="opacity" values="0;0;.9;0" keyTimes="0;.9;.93;1" dur="11s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="1300 60;1300 60;900 200" keyTimes="0;.9;1" dur="11s" repeatCount="indefinite"/></line>';
 const BLUR = '<filter id="b" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="40"/></filter>';
 const BACKGROUNDS = {
   plain: { name: 'Plain' },
   dawn: { name: 'Dawn', css: scene(sky('g', [[0, '#1b1035'], [.45, '#5b2a63'], [.75, '#d4685c'], [1, '#f6c37c']]) + BLUR,
-    '<rect width="1600" height="900" fill="url(#g)"/><circle cx="800" cy="780" r="200" fill="#ffd9a0" opacity=".55" filter="url(#b)"/><circle cx="800" cy="800" r="90" fill="#fff1d6" opacity=".9"/><path d="M0 760 Q300 690 620 750 T1180 730 T1600 750 V900 H0Z" fill="#2a1430"/><path d="M0 820 Q400 770 800 820 T1600 810 V900 H0Z" fill="#170b1c"/>') },
+    `<rect width="1600" height="900" fill="url(#g)"/><circle cx="800" cy="780" r="200" fill="#ffd9a0" opacity=".55" filter="url(#b)">${breathe('r', '200;250;200', 9)}</circle><circle cx="800" cy="800" r="90" fill="#fff1d6" opacity=".9"/><g fill="#ffe7c4" opacity=".18" filter="url(#b)"><ellipse cx="400" cy="420" rx="420" ry="40">${drift(160, 40)}</ellipse><ellipse cx="1200" cy="330" rx="360" ry="34">${drift(-140, 34)}</ellipse></g><path d="M0 760 Q300 690 620 750 T1180 730 T1600 750 V900 H0Z" fill="#2a1430"/><path d="M0 820 Q400 770 800 820 T1600 810 V900 H0Z" fill="#170b1c"/>`) },
   night: { name: 'Starry night', css: scene(sky('g', [[0, '#03050f'], [.6, '#0c1834'], [1, '#1e2f5c']]) + BLUR,
-    `<rect width="1600" height="900" fill="url(#g)"/><ellipse cx="900" cy="300" rx="700" ry="90" transform="rotate(-18 900 300)" fill="#8fa6ff" opacity=".12" filter="url(#b)"/>${stars(260, 7)}<path d="M0 820 Q500 760 900 810 T1600 790 V900 H0Z" fill="#050912"/>`) },
+    `<rect width="1600" height="900" fill="url(#g)"/><ellipse cx="900" cy="300" rx="700" ry="90" transform="rotate(-18 900 300)" fill="#8fa6ff" opacity=".12" filter="url(#b)">${breathe('opacity', '.08;.18;.08', 14)}</ellipse>${stars(260, 7)}${SHOOTING}<path d="M0 820 Q500 760 900 810 T1600 790 V900 H0Z" fill="#050912"/>`) },
   mountains: { name: 'Mountains', css: scene(sky('g', [[0, '#0e1a2c'], [.55, '#3d4f78'], [1, '#d39a76']]),
-    '<rect width="1600" height="900" fill="url(#g)"/><path d="M0 600 L220 430 L380 540 L600 340 L820 560 L1010 400 L1250 580 L1420 470 L1600 560 V900 H0Z" fill="#45507a" opacity=".85"/><path d="M0 700 L260 540 L470 660 L720 500 L980 690 L1210 560 L1600 700 V900 H0Z" fill="#2a3256"/><path d="M0 790 L320 680 L640 780 L980 670 L1300 790 L1600 720 V900 H0Z" fill="#141a33"/>') },
+    `<rect width="1600" height="900" fill="url(#g)"/><path d="M0 600 L220 430 L380 540 L600 340 L820 560 L1010 400 L1250 580 L1420 470 L1600 560 V900 H0Z" fill="#45507a" opacity=".85"/><path d="M0 700 L260 540 L470 660 L720 500 L980 690 L1210 560 L1600 700 V900 H0Z" fill="#2a3256"/><g fill="#dfe6ff" filter="url(#b)"><ellipse cx="500" cy="640" rx="520" ry="50" opacity=".16">${drift(220, 46)}</ellipse><ellipse cx="1250" cy="720" rx="480" ry="46" opacity=".14">${drift(-200, 38)}</ellipse></g><path d="M0 790 L320 680 L640 780 L980 670 L1300 790 L1600 720 V900 H0Z" fill="#141a33"/>`) },
   sea: { name: 'Sea', css: scene(sky('g', [[0, '#0a1d33'], [.5, '#2a5a7c'], [.68, '#e7b07a']]) + sky('w', [[0, '#1d4a66'], [1, '#06141f']]) + BLUR,
-    '<rect width="1600" height="900" fill="url(#g)"/><circle cx="1100" cy="610" r="120" fill="#ffe2b0" opacity=".6" filter="url(#b)"/><rect y="610" width="1600" height="290" fill="url(#w)"/><path d="M820 640 h560 M900 670 h420 M960 700 h300 M1020 735 h180" stroke="#ffd9a0" stroke-width="4" stroke-linecap="round" opacity=".5"/>') },
+    `<rect width="1600" height="900" fill="url(#g)"/><circle cx="1100" cy="610" r="120" fill="#ffe2b0" opacity=".6" filter="url(#b)">${breathe('opacity', '.5;.75;.5', 8)}</circle><rect y="610" width="1600" height="290" fill="url(#w)"/><g stroke="#ffd9a0" stroke-width="4" stroke-linecap="round"><path d="M820 640 h560" opacity=".5">${breathe('opacity', '.25;.6;.25', 5)}${drift(30, 7)}</path><path d="M900 670 h420" opacity=".5">${breathe('opacity', '.5;.2;.5', 6)}${drift(-24, 6)}</path><path d="M960 700 h300" opacity=".5">${breathe('opacity', '.2;.55;.2', 4.5)}${drift(20, 5)}</path><path d="M1020 735 h180" opacity=".5">${breathe('opacity', '.45;.15;.45', 5.5)}${drift(-16, 6.5)}</path></g>`) },
   heaven: { name: 'Light', css: scene(sky('g', [[0, '#16223f'], [.6, '#4f5f93'], [1, '#b8936c']]) + BLUR,
-    '<rect width="1600" height="900" fill="url(#g)"/><g fill="#fff" opacity=".08"><path d="M800 -50 L520 900 H640Z"/><path d="M800 -50 L760 900 H860Z"/><path d="M800 -50 L1000 900 H1120Z"/><path d="M800 -50 L250 900 H330Z"/><path d="M800 -50 L1300 900 H1400Z"/></g><g fill="#fff" filter="url(#b)"><ellipse cx="300" cy="790" rx="380" ry="100" opacity=".3"/><ellipse cx="1250" cy="810" rx="420" ry="110" opacity=".28"/><ellipse cx="800" cy="900" rx="600" ry="100" opacity=".32"/><ellipse cx="800" cy="20" rx="260" ry="110" opacity=".3"/></g>') },
+    `<rect width="1600" height="900" fill="url(#g)"/><g fill="#fff" opacity=".08">${breathe('opacity', '.05;.13;.05', 10)}<path d="M800 -50 L520 900 H640Z"/><path d="M800 -50 L760 900 H860Z"/><path d="M800 -50 L1000 900 H1120Z"/><path d="M800 -50 L250 900 H330Z"/><path d="M800 -50 L1300 900 H1400Z"/></g><g fill="#fff" filter="url(#b)"><ellipse cx="300" cy="790" rx="380" ry="100" opacity=".3">${drift(120, 36)}</ellipse><ellipse cx="1250" cy="810" rx="420" ry="110" opacity=".28">${drift(-110, 30)}</ellipse><ellipse cx="800" cy="900" rx="600" ry="100" opacity=".32"/><ellipse cx="800" cy="20" rx="260" ry="110" opacity=".3"/></g>`) },
   field: { name: 'Harvest', css: scene(sky('g', [[0, '#2b1a3a'], [.5, '#a2536a'], [.72, '#f0b36c']]) + sky('f', [[0, '#b0782c'], [1, '#3b2410']]) + BLUR,
-    `<rect width="1600" height="900" fill="url(#g)"/><circle cx="420" cy="600" r="150" fill="#ffd28a" opacity=".6" filter="url(#b)"/><rect y="620" width="1600" height="280" fill="url(#f)"/>${Array.from({ length: 70 }, (_, i) => `<path d="M${i * 23 + 4} 900 q6 -${150 + (i * 37) % 90} 14 -${200 + (i * 53) % 110}" stroke="#4a2c10" stroke-width="3" fill="none" opacity=".55"/>`).join('')}`) },
+    `<rect width="1600" height="900" fill="url(#g)"/><circle cx="420" cy="600" r="150" fill="#ffd28a" opacity=".6" filter="url(#b)"/><rect y="620" width="1600" height="280" fill="url(#f)"/><g transform="translate(0 900)"><g><animateTransform attributeName="transform" type="skewX" values="0;2.5;0;-1.5;0" dur="7s" repeatCount="indefinite"/><g transform="translate(0 -900)">${Array.from({ length: 70 }, (_, i) => `<path d="M${i * 23 + 4} 900 q6 -${150 + (i * 37) % 90} 14 -${200 + (i * 53) % 110}" stroke="#4a2c10" stroke-width="3" fill="none" opacity=".55"/>`).join('')}</g></g></g>`) },
   photo: { name: 'Your photo' },
 };
 let presBg = store.get('presBg') || 'plain';
-const photoUrl = () => store.get('presPhoto');
+let screenPhoto = '';   // on a screen, the leader's photo arrives over the connection
+const photoUrl = () => remote.role === 'screen' ? screenPhoto : store.get('presPhoto');
 function applyBg() {
   if (presBg === 'photo' && !photoUrl()) presBg = 'plain';
   const css = presBg === 'photo' ? `url("${photoUrl()}")` : BACKGROUNDS[presBg]?.css;
@@ -1293,12 +1456,12 @@ function applyBg() {
   document.querySelectorAll('[data-psize]').forEach(b => b.setAttribute('aria-pressed', +b.dataset.psize === presSize));
 }
 function showPanel(on) { $('pPanel').hidden = !on; $('pLook').setAttribute('aria-expanded', on); }
-$('pLook').onclick = () => showPanel($('pPanel').hidden);
+$('pLook').onclick = () => { showCast(false); showPanel($('pPanel').hidden); };
 $('pBgs').addEventListener('click', e => {
   const b = e.target.closest('[data-bg]');
   if (!b) return;
   if (b.dataset.bg === 'pick') { $('pPhotoFile').click(); return; }
-  presBg = b.dataset.bg; store.set('presBg', presBg); applyBg();
+  presBg = b.dataset.bg; store.set('presBg', presBg); applyBg(); sendState();
 });
 // A photo is shrunk to screen size and kept on this phone, so it is there next time and offline.
 $('pPhotoFile').onchange = async () => {
@@ -1312,7 +1475,7 @@ $('pPhotoFile').onchange = async () => {
     c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
     const data = c.toDataURL('image/jpeg', .82);
     localStorage.setItem('presPhoto', data);
-    presBg = 'photo'; store.set('presBg', 'photo'); applyBg();
+    presBg = 'photo'; store.set('presBg', 'photo'); applyBg(); sendState();
   } catch { toast('That photo could not be used. Try a smaller one.'); }
 };
 document.querySelectorAll('[data-psize]').forEach(b => b.onclick = () => {
@@ -1328,9 +1491,235 @@ document.querySelectorAll('[data-psize]').forEach(b => b.onclick = () => {
 });
 addEventListener('resize', () => { if (pres) fitSlide(); });
 
+/* ---------- Showing the slides on a TV or projector ----------
+   One device is the screen (a TV browser, a laptop on a projector, or a second window on this computer) and shows only
+   the slides. The leader's phone becomes the controller: what is on screen now and next, jumps to any verse or hymn,
+   and black or welcome screens. A phone finds its screen by a 4-digit code through PeerJS's free connection service;
+   the words then travel directly between the two devices. A second window on the same computer talks over a
+   BroadcastChannel instead and needs no internet. */
+const PEERJS = 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js';
+const QRJS = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+const PEER_PREFIX = 'davidian-hymnal-screen-';
+const remote = { role: null, kind: null, code: '', peer: null, conn: null, chan: null, photoSent: '' };
+const scriptLoads = {};
+const loadScript = src => scriptLoads[src] ||= new Promise((ok, fail) => document.head.append(Object.assign(document.createElement('script'),
+  { src, onload: ok, onerror: () => { delete scriptLoads[src]; fail(); } })));
+const logoHtml = () => `<div class="p-kicker">The Davidian</div><div class="p-title">Hymnal</div><div class="p-meta">Hear ye the Rod · Sing ye the Rod</div>`;
+
+// Leader side
+function linkSend(msg) {
+  try {
+    if (remote.kind === 'window' && remote.chan) remote.chan.postMessage(msg);
+    else if (remote.conn && remote.conn.open) remote.conn.send(msg);
+  } catch {}
+}
+const photoKey = () => { const p = photoUrl() || ''; return p.length + p.slice(-32); };
+function sendState() {
+  if (remote.role !== 'leader') return;
+  if (presBg === 'photo' && photoUrl() && remote.photoSent !== photoKey()) { linkSend({ t: 'photo', data: photoUrl() }); remote.photoSent = photoKey(); }
+  linkSend(pres
+    ? { t: 'state', list: pres.list, i: pres.i, blank: pres.blank || null, size: presSize, bg: presBg }
+    : { t: 'state', list: [], i: 0, blank: 'logo', size: presSize, bg: presBg });
+}
+function miniView(el, sl, blank, now) {
+  el.className = 'mini' + (now ? ' now' : '') + (sl && !blank && sl.kind === 'chorus' ? ' is-chorus' : '');
+  el.style.backgroundImage = blank === 'black' ? 'none' : $('pBg').style.backgroundImage;
+  el.innerHTML = blank === 'black' ? '<span class="mini-note">Black screen</span>'
+    : blank === 'logo' ? `<div>${logoHtml()}</div>`
+    : sl ? `<div>${slideHtml(sl)}</div>` : '<span class="mini-note">End of the list</span>';
+}
+function renderLeader() {
+  const { slides, i } = pres, cur = slides[i];
+  $('cStatus').textContent = remote.kind === 'window' ? 'Showing in the other window' : `Showing on screen ${remote.code}`;
+  miniView($('cNow'), cur, pres.blank, true);
+  miniView($('cNext'), pres.blank ? cur : slides[i + 1]);
+  $('cParts').innerHTML = slides.map((sl, k) => sl.s !== cur.s ? '' :
+    `<button data-go="${k}" aria-pressed="${k === i && !pres.blank}">${sl.kind === 'title' ? 'Title' : sl.kind === 'chorus' ? 'Chorus' : 'Verse ' + sl.sec.label}${sl.of ? ' · ' + sl.of.split('/')[0] : ''}</button>`).join('');
+  $('cSongsWrap').hidden = pres.list.length < 2;
+  $('cSongs').innerHTML = pres.list.map(n => `<button data-go="${slides.findIndex(x => x.s.n === n)}" aria-pressed="${cur.s.n === n}">No. ${n}</button>`).join('');
+  $('cBlack').setAttribute('aria-pressed', pres.blank === 'black');
+  $('cLogo').setAttribute('aria-pressed', pres.blank === 'logo');
+}
+$('pCtrl').addEventListener('click', e => {
+  showPanel(false); showCast(false);
+  const go = e.target.closest('[data-go]');
+  if (go) { pres.i = +go.dataset.go; pres.blank = null; renderSlide(); }
+});
+$('cBlack').onclick = () => { pres.blank = pres.blank === 'black' ? null : 'black'; renderSlide(); };
+$('cLogo').onclick = () => { pres.blank = pres.blank === 'logo' ? null : 'logo'; renderSlide(); };
+
+function setLeader(on) {
+  remote.role = on ? 'leader' : null;
+  if (on) remote.photoSent = '';
+  $('present').classList.toggle('ctrl', on && !!pres);
+  renderCast();
+  if (pres) { stageKey = ''; renderSlide(); } else sendState();
+}
+function renderCast() {
+  const on = remote.role === 'leader';
+  $('castOff').hidden = on; $('castOn').hidden = !on;
+  $('castOnText').textContent = remote.kind === 'window' ? 'Connected to the second window.' : `Connected to screen ${remote.code}.`;
+  $('castUrl').textContent = location.host + location.pathname.replace(/index\.html$/, '');
+  $('castWindow').hidden = matchMedia('(pointer: coarse)').matches;
+  $('remoteChip').hidden = !on || !$('present').hidden;
+  $('remoteChipText').textContent = remote.kind === 'window' ? 'Second window connected' : `Screen ${remote.code} connected`;
+}
+function showCast(on) { $('pCastPanel').hidden = !on; $('pCast').setAttribute('aria-expanded', on); if (on) renderCast(); }
+$('pCast').onclick = () => { showPanel(false); showCast($('pCastPanel').hidden); };
+$('castGo').onclick = () => connectScreen($('castCode').value);
+$('castCode').addEventListener('keydown', e => { if (e.key === 'Enter') connectScreen($('castCode').value); });
+$('castStop').onclick = $('remoteChipStop').onclick = () => { disconnectScreen(); toast('Disconnected from the screen'); };
+$('castWindow').onclick = openScreenWindow;
+
+async function connectScreen(code, quiet) {
+  code = String(code || '').replace(/\D/g, '').slice(0, 4);
+  if (code.length !== 4) { toast('Enter the 4-digit code shown on the screen'); return; }
+  disconnectScreen();
+  Object.assign(remote, { kind: 'peer', code });
+  if (!quiet) toast('Connecting…');
+  try { await loadScript(PEERJS); } catch { toast('Connecting needs the internet. Check the connection and try again.'); return; }
+  const peer = remote.peer = new Peer();
+  peer.on('open', () => {
+    if (remote.peer !== peer) return;
+    const conn = remote.conn = peer.connect(PEER_PREFIX + code, { reliable: true });
+    conn.on('open', () => {
+      if (remote.conn !== conn) return;
+      try { sessionStorage.setItem('screenCode', code); } catch {}
+      setLeader(true); showCast(false);
+      toast(`Connected to screen ${code}`);
+    });
+    conn.on('close', () => { if (remote.conn === conn) { remote.conn = null; setLeader(false); toast('Lost the screen. It reconnects when this phone is back online.'); } });
+  });
+  peer.on('error', e => {
+    if (remote.peer !== peer || (remote.conn && remote.conn.open)) return;
+    toast(e.type === 'peer-unavailable' ? `No screen found with code ${code}. Check the code on the TV.` : 'Could not reach the screen. Try again.');
+    disconnectScreen();
+  });
+}
+function disconnectScreen() {
+  const { conn, peer, chan } = remote;
+  if (remote.role === 'leader') linkSend({ t: 'state', list: [], i: 0, blank: 'logo', size: presSize, bg: presBg });
+  Object.assign(remote, { role: null, kind: null, conn: null, peer: null, chan: null });
+  try { conn && conn.close(); } catch {}
+  try { peer && peer.destroy(); } catch {}
+  try { chan && chan.close(); } catch {}
+  try { sessionStorage.removeItem('screenCode'); } catch {}
+  setLeader(false);
+}
+function openScreenWindow() {
+  disconnectScreen();
+  const id = Math.random().toString(36).slice(2, 8);
+  const w = window.open(location.pathname + '#screen=w' + id, 'hymnal-screen-' + id, 'popup,width=1280,height=720');
+  if (!w) { toast('The browser blocked the new window. Allow pop-ups for this site and try again.'); return; }
+  const chan = new BroadcastChannel('hymnal-' + id);
+  Object.assign(remote, { kind: 'window', code: 'window', chan });
+  chan.onmessage = e => {
+    if (remote.chan !== chan) return;
+    if (e.data && e.data.t === 'ready') { setLeader(true); showCast(false); toast('Drag the new window to the projector, then click it to fill the screen'); }
+    if (e.data && e.data.t === 'bye') { disconnectScreen(); toast('The screen window was closed'); }
+  };
+}
+// A phone that slept or lost signal reconnects to the same screen when it is back
+addEventListener('visibilitychange', () => {
+  let code = '';
+  try { code = sessionStorage.getItem('screenCode') || ''; } catch {}
+  if (document.visibilityState === 'visible' && code && remote.kind !== 'window' && !(remote.conn && remote.conn.open)) connectScreen(code, true);
+});
+
+// Screen side
+function startScreen(arg) {
+  if (remote.role === 'screen') return;
+  closeDialogs();
+  disconnectScreen();
+  remote.role = 'screen';
+  pres = { list: [], slides: [], i: 0, blank: 'logo', listKey: '' };
+  stageKey = '';
+  $('present').hidden = false;
+  $('present').classList.add('screen');
+  keepAwake(true);
+  applyBg(); showStage();
+  if (arg && arg[0] === 'w') {
+    const chan = remote.chan = new BroadcastChannel('hymnal-' + arg.slice(1));
+    remote.kind = 'window';
+    chan.onmessage = e => onScreenMessage(e.data);
+    chan.postMessage({ t: 'ready' });
+    addEventListener('pagehide', () => chan.postMessage({ t: 'bye' }));
+  } else startScreenPeer();
+}
+async function startScreenPeer() {
+  let code = '';
+  try { code = sessionStorage.getItem('myScreenCode') || ''; } catch {}
+  if (!/^\d{4}$/.test(code)) code = String(Math.floor(1000 + Math.random() * 9000));
+  $('pWait').hidden = false;
+  $('pWaitCode').textContent = '····';
+  try { await loadScript(PEERJS); } catch {
+    $('pWaitText').textContent = 'This screen needs the internet to connect to a phone. Trying again…';
+    setTimeout(startScreenPeer, 5000); return;
+  }
+  const peer = remote.peer = new Peer(PEER_PREFIX + code);
+  peer.on('open', () => {
+    try { sessionStorage.setItem('myScreenCode', code); } catch {}
+    $('pWaitCode').textContent = code;
+    renderQr(code);
+  });
+  peer.on('connection', conn => {
+    const old = remote.conn;
+    remote.conn = conn;
+    try { old && old.close(); } catch {}
+    conn.on('data', onScreenMessage);
+    conn.on('open', () => { $('pWait').hidden = true; });
+    conn.on('close', () => { if (remote.conn === conn) { remote.conn = null; pres.blank = 'logo'; showStage(); $('pWait').hidden = false; } });
+  });
+  peer.on('disconnected', () => { try { peer.reconnect(); } catch {} });
+  peer.on('error', e => {
+    if (remote.peer !== peer) return;
+    if (e.type === 'unavailable-id') { try { sessionStorage.removeItem('myScreenCode'); } catch {} peer.destroy(); startScreenPeer(); }
+    else if (!remote.conn) { peer.destroy(); setTimeout(startScreenPeer, 5000); }
+  });
+}
+async function renderQr(code) {
+  const url = location.origin + location.pathname.replace(/index\.html$/, '') + '#connect=' + code;
+  try {
+    await loadScript(QRJS);
+    const qr = qrcode(0, 'M'); qr.addData(url); qr.make();
+    $('pQr').innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+    $('pQr').hidden = false;
+  } catch { $('pQr').hidden = true; }
+}
+function onScreenMessage(m) {
+  if (!m || remote.role !== 'screen') return;
+  if (m.t === 'photo') { screenPhoto = m.data; applyBg(); return; }
+  if (m.t !== 'state') return;
+  $('pWait').hidden = true;
+  presSize = m.size || 1;
+  presBg = BACKGROUNDS[m.bg] ? m.bg : 'plain';
+  const listKey = (m.list || []).join() + '|' + presSize;
+  if (listKey !== pres.listKey) { pres.list = (m.list || []).filter(n => song(n)); pres.slides = pres.list.flatMap(slidesFor); pres.listKey = listKey; }
+  pres.i = Math.max(0, Math.min(m.i || 0, pres.slides.length - 1));
+  pres.blank = m.blank || null;
+  applyBg(); showStage();
+}
+function leaveScreen() { location.replace(location.pathname); }
+
+// #screen turns this device into a screen; #connect=1234 (from the QR code) connects this phone to one
+function checkScreenLink() {
+  const m = /^#(screen(?:=(w\w+))?|connect=(\d{4}))$/.exec(location.hash);
+  if (!m) return;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch {}
+  if (m[3]) { connectScreen(m[3]); toast('Connecting… then open a hymn and tap Present'); }
+  else startScreen(m[2] || '');
+}
+$('useScreen').onclick = () => startScreen('');
+addEventListener('hashchange', checkScreenLink);
+checkScreenLink();
+try { const code = sessionStorage.getItem('screenCode'); if (code && remote.role !== 'screen') connectScreen(code, true); } catch {}
+renderCast();
+
 /* ---------- Keyboard and swipe ---------- */
 document.addEventListener('keydown', e => {
+  if (remote.role === 'screen') { if (e.key === 'Escape') leaveScreen(); return; }
   if (pres) {
+    if (document.activeElement && document.activeElement.id === 'castCode') return;
     if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); slide(1); }
     if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); slide(-1); }
     if (e.key === 'Escape') endPresent(false);
@@ -1362,6 +1751,7 @@ function onSwipe(el, fn) {
 }
 onSwipe($('reader'), step);
 onSwipe($('pStage'), slide);
+onSwipe($('pCtrl'), slide);
 
 /* ---------- Install prompt ---------- */
 const SHARE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>';
@@ -1477,7 +1867,7 @@ document.addEventListener('keydown', e => {
 $('tourAgain').onclick = startTour;
 
 if (songFromHash()) show(songFromHash());
-else if (store.get('toured') !== '1' && !sharedMatchOnLoad) startTour();
+else if (store.get('toured') !== '1' && !sharedMatchOnLoad && remote.role !== 'screen' && !remote.code) startTour();   // not on a TV, nor while a phone connects to one
 renderInstall();
 
 /* ---------- Updates ---------- */
