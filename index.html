@@ -689,7 +689,7 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
     <div class="seg" role="group" aria-label="Text size">
       <button data-psize="1">Normal</button><button data-psize="2">Large</button><button data-psize="3">Largest</button>
     </div>
-    <small>Large and Largest show fewer lines on each slide, so the words can be read from the back of the room.</small>
+    <small>Each slide holds about the same amount of words. Large and Largest put fewer on each slide, so the words can be bigger.</small>
     <h4>Font</h4>
     <div class="p-fonts" id="pFonts"></div>
     <small>Bold, open fonts read best from far away. Clear was designed for people with low vision.</small>
@@ -1327,18 +1327,52 @@ $('back').onclick = close;
 
 /* ---------- Presentation ---------- */
 let pres = null;   // { slides, i }
-// Text size: Normal shows a whole verse per slide; Large splits it into two slides, Largest into one regrouped line each.
+// Slides carry about the same amount of words. No slide holds more than the size's limit (Normal about 180 letters,
+// Large 110, Largest 60). Within that, the whole list is planned together: verses and choruses are split into equal
+// parts so the slides come out as even as possible, without adding many extra slides. Breaks fall at punctuation where they can.
 let presSize = +store.get('presSize') || 1;
-function slidesFor(n) {
-  const s = song(n);
-  return [{ s, kind: 'title' }, ...sungOrder(s).flatMap(sec => {
-    const kind = sec.label === 'Chorus' ? 'chorus' : 'verse';
-    const lines = sec.flow || sec.lines;
-    const per = presSize === 3 ? 1 : presSize === 2 ? Math.ceil(lines.length / 2) : lines.length;
-    const parts = [];
-    for (let k = 0; k < lines.length; k += per) parts.push(lines.slice(k, k + per));
-    return parts.map((part, j) => ({ s, kind, sec, part, of: parts.length > 1 ? `${j + 1}/${parts.length}` : '' }));
-  })];
+const SLIDE_CHARS = { 1: 180, 2: 110, 3: 60 };
+function splitEven(words, k) {
+  k = Math.min(k, words.length);
+  const n = words.length, pre = [0];
+  words.forEach((w, i) => pre.push(pre[i] + w.length + 1));
+  const ideal = pre[n] / k;
+  const brk = w => /[.!?]["”’)]?$/.test(w) ? 0 : /[;:]["”’)]?$/.test(w) ? .05 : /,["”’)]?$/.test(w) ? .25 : 1;
+  // best[i][g]: lowest cost of splitting the first i words into g parts
+  const best = Array.from({ length: n + 1 }, () => Array(k + 1).fill(Infinity)), back = best.map(r => r.map(() => 0));
+  best[0][0] = 0;
+  for (let i = 1; i <= n; i++) for (let g = 1; g <= k; g++) for (let j = g - 1; j < i; j++) {
+    if (best[j][g - 1] === Infinity) continue;
+    const c = best[j][g - 1] + 14 * ((pre[i] - pre[j]) / ideal - 1) ** 2 + (i < n ? brk(words[i - 1]) : 0);
+    if (c < best[i][g]) { best[i][g] = c; back[i][g] = j; }
+  }
+  const parts = [];
+  for (let i = n, g = k; g > 0; g--) { const j = back[i][g]; parts.unshift(words.slice(j, i).join(' ')); i = j; }
+  return parts;
+}
+const secText = sec => (sec.flow || sec.lines).join(' ');
+// the largest slide length T (up to the limit) that makes the slides most even, counting each extra slide as a small cost
+function slideTarget(lens) {
+  const limit = SLIDE_CHARS[presSize];
+  let bestT = limit, bestCost = Infinity;
+  for (let T = limit; T >= limit * .4; T -= 2) {
+    const parts = lens.flatMap(l => { const k = Math.ceil(l / T); return Array(k).fill(l / k); });
+    const mid = [...parts].sort((a, b) => a - b)[parts.length >> 1];
+    // the fullest slide counts extra: it also sets the text size for every slide
+    const cost = parts.reduce((a, p) => a + Math.log(p / mid) ** 2, 0) / parts.length + .5 * Math.log(Math.max(...parts) / mid) ** 2
+      + .08 * (parts.length / lens.length - 1);
+    if (cost < bestCost - 1e-9) { bestCost = cost; bestT = T; }
+  }
+  return bestT;
+}
+function buildSlides(list) {
+  const songs = list.map(song).filter(Boolean);
+  const T = slideTarget(songs.flatMap(s => sungOrder(s).map(sec => secText(sec).length)));
+  return songs.flatMap(s => [{ s, kind: 'title' }, ...sungOrder(s).flatMap(sec => {
+    const kind = sec.label === 'Chorus' ? 'chorus' : 'verse', text = secText(sec);
+    const parts = splitEven(text.split(/\s+/), Math.ceil(text.length / T));
+    return parts.map((part, j) => ({ s, kind, sec, part: [part], of: parts.length > 1 ? `${j + 1}/${parts.length}` : '' }));
+  })]);
 }
 // largest type size at which a box's content still fits it
 function maxFit(box) {
@@ -1409,7 +1443,7 @@ function showStage() {
   showOnStage(slideHtml(sl), `${presSize}|${pres.i}|${pres.list.join()}`, sl.kind === 'chorus', sl.kind !== 'title');
 }
 function present(list) {
-  pres = { list, slides: list.flatMap(slidesFor), i: 0, blank: null };
+  pres = { list, slides: buildSlides(list), i: 0, blank: null };
   stageKey = '';
   applyBg(); applyPresFont();
   $('present').hidden = false;
@@ -1620,7 +1654,7 @@ document.querySelectorAll('[data-psize]').forEach(b => b.onclick = () => {
   if (pres) {
     // stay on the same part of the hymn
     const cur = pres.slides[pres.i];
-    pres.slides = pres.list.flatMap(slidesFor);
+    pres.slides = buildSlides(pres.list);
     const j = pres.slides.findIndex(x => x.s === cur.s && x.sec === cur.sec);
     pres.i = j >= 0 ? j : Math.min(pres.i, pres.slides.length - 1);
     applyBg(); renderSlide();
@@ -1832,7 +1866,7 @@ function onScreenMessage(m) {
   presBg = BACKGROUNDS[m.bg] ? m.bg : 'plain';
   if ((PRES_FONTS[m.font] ? m.font : 'classic') !== presFont) { presFont = PRES_FONTS[m.font] ? m.font : 'classic'; applyPresFont(); stageKey = ''; }
   const listKey = (m.list || []).join() + '|' + presSize;
-  if (listKey !== pres.listKey) { pres.list = (m.list || []).filter(n => song(n)); pres.slides = pres.list.flatMap(slidesFor); pres.listKey = listKey; }
+  if (listKey !== pres.listKey) { pres.list = (m.list || []).filter(n => song(n)); pres.slides = buildSlides(pres.list); pres.listKey = listKey; }
   pres.i = Math.max(0, Math.min(m.i || 0, pres.slides.length - 1));
   pres.blank = m.blank || null;
   applyBg(); showStage();
