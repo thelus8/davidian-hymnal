@@ -478,6 +478,20 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
 }
 .p-panel h4 { margin: 4px 0 0; font: 600 .7rem var(--ui); letter-spacing: .14em; text-transform: uppercase; color: rgba(246, 239, 248, .55); }
 .p-bgs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.p-bgs-h { grid-column: 1 / -1; font: 500 .72rem var(--ui); color: rgba(246, 239, 248, .6); margin-top: 6px; }
+.p-panel { max-height: calc(100vh - 100px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow-y: auto; overscroll-behavior: contain; }
+/* Presentation fonts: each button shows its own font */
+.p-fonts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.p-fonts button {
+  height: 56px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, .14); background: rgba(255, 255, 255, .06); color: #fff;
+  display: grid; place-items: center; align-content: center; gap: 2px; padding: 0 4px;
+}
+.p-fonts button b { font-size: 1.15rem; line-height: 1; }
+.p-fonts button span { font: 500 .66rem var(--ui); color: rgba(246, 239, 248, .65); }
+.p-fonts button[aria-pressed="true"] { border-color: var(--stage-accent); box-shadow: inset 0 0 0 1px var(--stage-accent); }
+.p-fit { font-family: var(--p-font, var(--lyric)); font-weight: var(--p-weight, 400); }
+.p-lines.it { font-style: var(--p-italic, italic); }
+#present[data-pfont] .p-title { font-family: var(--p-font); font-weight: var(--p-weight); }
 .p-bgs button {
   aspect-ratio: 16 / 10; border-radius: 10px; border: 0; padding: 0; position: relative; overflow: hidden; color: #fff;
   background: #0b0710 center / cover no-repeat; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14); font: 500 .66rem var(--ui);
@@ -661,6 +675,9 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
       <button data-psize="1">Normal</button><button data-psize="2">Large</button><button data-psize="3">Largest</button>
     </div>
     <small>Large and Largest show fewer lines on each slide, so the words can be read from the back of the room.</small>
+    <h4>Font</h4>
+    <div class="p-fonts" id="pFonts"></div>
+    <small>Bold, open fonts read best from far away. Clear was designed for people with low vision.</small>
   </div>
   <div class="p-panel" id="pCastPanel" hidden>
     <h4>Show on a TV or projector</h4>
@@ -1358,7 +1375,7 @@ function showStage() {
 function present(list) {
   pres = { list, slides: list.flatMap(slidesFor), i: 0, blank: null };
   stageKey = '';
-  applyBg();
+  applyBg(); applyPresFont();
   $('present').hidden = false;
   $('present').classList.toggle('ctrl', remote.role === 'leader');
   renderCast();
@@ -1408,25 +1425,87 @@ function stars(count, seed) {
 }
 const breathe = (attr, values, dur) => `<animate attributeName="${attr}" values="${values}" dur="${dur}s" repeatCount="indefinite" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1" keyTimes="0;.5;1"/>`;
 const drift = (dx, dur) => `<animateTransform attributeName="transform" type="translate" values="0 0;${dx} 0;0 0" dur="${dur}s" repeatCount="indefinite" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1" keyTimes="0;.5;1"/>`;
+const seeded = seed => { let x = seed; return () => (x = (x * 16807) % 2147483647) / 2147483647; };
+// specks of light that rise and fade
+function motes(count, seed, color) {
+  const rnd = seeded(seed);
+  return Array.from({ length: count }, () => {
+    const x = (rnd() * 1600).toFixed(0), y = (500 + rnd() * 400).toFixed(0), d = (8 + rnd() * 8).toFixed(1), b = (rnd() * 10).toFixed(1);
+    return `<circle cx="${x}" cy="${y}" r="${(rnd() * 2 + 1).toFixed(1)}" fill="${color}" opacity="0"><animate attributeName="opacity" values="0;.8;0" dur="${d}s" begin="${b}s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="0 0;${(rnd() * 60 - 30).toFixed(0)} -320" dur="${d}s" begin="${b}s" repeatCount="indefinite"/></circle>`;
+  }).join('');
+}
+// soft out-of-focus candle glows
+function bokeh(count, seed) {
+  const rnd = seeded(seed), colors = ['#ffb35c', '#ff8a3d', '#ffd28a'];
+  return Array.from({ length: count }, (_, k) => `<circle cx="${(rnd() * 1600).toFixed(0)}" cy="${(rnd() * 900).toFixed(0)}" r="${(20 + rnd() * 50).toFixed(0)}" fill="${colors[k % 3]}" opacity="${(.07 + rnd() * .15).toFixed(2)}" filter="url(#b2)">${drift((rnd() * 60 - 30).toFixed(0), (14 + rnd() * 14).toFixed(0))}</circle>`).join('');
+}
+// a church window of coloured panes
+function panes() {
+  const rnd = seeded(17), colors = ['#1d3f8f', '#8e1b3a', '#c99a2e', '#2f6b4a', '#5a2d82', '#1d5f8f'];
+  let out = '';
+  for (let x = 520; x < 1080; x += 70) for (let y = 40; y < 900; y += 70) out += `<rect x="${x}" y="${y}" width="70" height="70" fill="${colors[Math.floor(rnd() * colors.length)]}" stroke="#06040a" stroke-width="7"/>`;
+  return out + '<circle cx="800" cy="260" r="120" fill="#c99a2e" opacity=".5" stroke="#06040a" stroke-width="9"/>' +
+    Array.from({ length: 8 }, (_, k) => `<path d="M800 260 L${(800 + 120 * Math.cos(k * Math.PI / 4)).toFixed(0)} ${(260 + 120 * Math.sin(k * Math.PI / 4)).toFixed(0)}" stroke="#06040a" stroke-width="7"/>`).join('');
+}
+// a walled city on a hill at dusk, with a few lit windows
+function skyline() {
+  const rnd = seeded(29);
+  let out = '<path d="M0 900 V790 Q800 730 1600 790 V900Z" fill="#120c1c"/><rect x="0" y="740" width="1600" height="80" fill="#120c1c"/>';
+  for (let x = 0; x < 1600; x += 36) out += `<rect x="${x}" y="726" width="20" height="16" fill="#120c1c"/>`;
+  [[90, 120], [330, 160], [560, 110], [1040, 150], [1270, 120], [1480, 170]].forEach(([x, h]) => {
+    out += `<rect x="${x}" y="${740 - h}" width="60" height="${h}" fill="#120c1c"/>`;
+    for (let k = 0; k < 2; k++) out += `<rect x="${x + 14 + k * 22}" y="${750 - h + 20 + rnd() * 30}" width="8" height="14" fill="#ffcf7a" opacity=".7">${breathe('opacity', '.5;.85;.5', (3 + rnd() * 4).toFixed(1))}</rect>`;
+  });
+  out += '<path d="M700 742 A100 96 0 0 1 900 742Z" fill="#120c1c"/><rect x="796" y="626" width="8" height="26" fill="#120c1c"/>';
+  out += '<path d="M440 742 A50 46 0 0 1 540 742Z" fill="#120c1c"/><path d="M1130 742 A56 52 0 0 1 1242 742Z" fill="#120c1c"/>';
+  return out;
+}
 const SHOOTING = '<line x1="0" y1="0" x2="120" y2="40" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0"><animate attributeName="opacity" values="0;0;.9;0" keyTimes="0;.9;.93;1" dur="11s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="1300 60;1300 60;900 200" keyTimes="0;.9;1" dur="11s" repeatCount="indefinite"/></line>';
 const BLUR = '<filter id="b" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="40"/></filter>';
+const BLUR2 = '<filter id="b2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="10"/></filter>';
 const BACKGROUNDS = {
-  plain: { name: 'Plain' },
-  dawn: { name: 'Dawn', css: scene(sky('g', [[0, '#1b1035'], [.45, '#5b2a63'], [.75, '#d4685c'], [1, '#f6c37c']]) + BLUR,
+  dawn: { name: 'Dawn', group: 'Sky and nature', css: scene(sky('g', [[0, '#1b1035'], [.45, '#5b2a63'], [.75, '#d4685c'], [1, '#f6c37c']]) + BLUR,
     `<rect width="1600" height="900" fill="url(#g)"/><circle cx="800" cy="780" r="200" fill="#ffd9a0" opacity=".55" filter="url(#b)">${breathe('r', '200;250;200', 9)}</circle><circle cx="800" cy="800" r="90" fill="#fff1d6" opacity=".9"/><g fill="#ffe7c4" opacity=".18" filter="url(#b)"><ellipse cx="400" cy="420" rx="420" ry="40">${drift(160, 40)}</ellipse><ellipse cx="1200" cy="330" rx="360" ry="34">${drift(-140, 34)}</ellipse></g><path d="M0 760 Q300 690 620 750 T1180 730 T1600 750 V900 H0Z" fill="#2a1430"/><path d="M0 820 Q400 770 800 820 T1600 810 V900 H0Z" fill="#170b1c"/>`) },
-  night: { name: 'Starry night', css: scene(sky('g', [[0, '#03050f'], [.6, '#0c1834'], [1, '#1e2f5c']]) + BLUR,
+  night: { name: 'Starry night', group: 'Sky and nature', css: scene(sky('g', [[0, '#03050f'], [.6, '#0c1834'], [1, '#1e2f5c']]) + BLUR,
     `<rect width="1600" height="900" fill="url(#g)"/><ellipse cx="900" cy="300" rx="700" ry="90" transform="rotate(-18 900 300)" fill="#8fa6ff" opacity=".12" filter="url(#b)">${breathe('opacity', '.08;.18;.08', 14)}</ellipse>${stars(260, 7)}${SHOOTING}<path d="M0 820 Q500 760 900 810 T1600 790 V900 H0Z" fill="#050912"/>`) },
-  mountains: { name: 'Mountains', css: scene(sky('g', [[0, '#0e1a2c'], [.55, '#3d4f78'], [1, '#d39a76']]),
+  mountains: { name: 'Mountains', group: 'Sky and nature', css: scene(sky('g', [[0, '#0e1a2c'], [.55, '#3d4f78'], [1, '#d39a76']]),
     `<rect width="1600" height="900" fill="url(#g)"/><path d="M0 600 L220 430 L380 540 L600 340 L820 560 L1010 400 L1250 580 L1420 470 L1600 560 V900 H0Z" fill="#45507a" opacity=".85"/><path d="M0 700 L260 540 L470 660 L720 500 L980 690 L1210 560 L1600 700 V900 H0Z" fill="#2a3256"/><g fill="#dfe6ff" filter="url(#b)"><ellipse cx="500" cy="640" rx="520" ry="50" opacity=".16">${drift(220, 46)}</ellipse><ellipse cx="1250" cy="720" rx="480" ry="46" opacity=".14">${drift(-200, 38)}</ellipse></g><path d="M0 790 L320 680 L640 780 L980 670 L1300 790 L1600 720 V900 H0Z" fill="#141a33"/>`) },
-  sea: { name: 'Sea', css: scene(sky('g', [[0, '#0a1d33'], [.5, '#2a5a7c'], [.68, '#e7b07a']]) + sky('w', [[0, '#1d4a66'], [1, '#06141f']]) + BLUR,
+  sea: { name: 'Sea', group: 'Sky and nature', css: scene(sky('g', [[0, '#0a1d33'], [.5, '#2a5a7c'], [.68, '#e7b07a']]) + sky('w', [[0, '#1d4a66'], [1, '#06141f']]) + BLUR,
     `<rect width="1600" height="900" fill="url(#g)"/><circle cx="1100" cy="610" r="120" fill="#ffe2b0" opacity=".6" filter="url(#b)">${breathe('opacity', '.5;.75;.5', 8)}</circle><rect y="610" width="1600" height="290" fill="url(#w)"/><g stroke="#ffd9a0" stroke-width="4" stroke-linecap="round"><path d="M820 640 h560" opacity=".5">${breathe('opacity', '.25;.6;.25', 5)}${drift(30, 7)}</path><path d="M900 670 h420" opacity=".5">${breathe('opacity', '.5;.2;.5', 6)}${drift(-24, 6)}</path><path d="M960 700 h300" opacity=".5">${breathe('opacity', '.2;.55;.2', 4.5)}${drift(20, 5)}</path><path d="M1020 735 h180" opacity=".5">${breathe('opacity', '.45;.15;.45', 5.5)}${drift(-16, 6.5)}</path></g>`) },
-  heaven: { name: 'Light', css: scene(sky('g', [[0, '#16223f'], [.6, '#4f5f93'], [1, '#b8936c']]) + BLUR,
+  heaven: { name: 'Light', group: 'Sky and nature', css: scene(sky('g', [[0, '#16223f'], [.6, '#4f5f93'], [1, '#b8936c']]) + BLUR,
     `<rect width="1600" height="900" fill="url(#g)"/><g fill="#fff" opacity=".08">${breathe('opacity', '.05;.13;.05', 10)}<path d="M800 -50 L520 900 H640Z"/><path d="M800 -50 L760 900 H860Z"/><path d="M800 -50 L1000 900 H1120Z"/><path d="M800 -50 L250 900 H330Z"/><path d="M800 -50 L1300 900 H1400Z"/></g><g fill="#fff" filter="url(#b)"><ellipse cx="300" cy="790" rx="380" ry="100" opacity=".3">${drift(120, 36)}</ellipse><ellipse cx="1250" cy="810" rx="420" ry="110" opacity=".28">${drift(-110, 30)}</ellipse><ellipse cx="800" cy="900" rx="600" ry="100" opacity=".32"/><ellipse cx="800" cy="20" rx="260" ry="110" opacity=".3"/></g>`) },
-  field: { name: 'Harvest', css: scene(sky('g', [[0, '#2b1a3a'], [.5, '#a2536a'], [.72, '#f0b36c']]) + sky('f', [[0, '#b0782c'], [1, '#3b2410']]) + BLUR,
+  field: { name: 'Harvest', group: 'Sky and nature', css: scene(sky('g', [[0, '#2b1a3a'], [.5, '#a2536a'], [.72, '#f0b36c']]) + sky('f', [[0, '#b0782c'], [1, '#3b2410']]) + BLUR,
     `<rect width="1600" height="900" fill="url(#g)"/><circle cx="420" cy="600" r="150" fill="#ffd28a" opacity=".6" filter="url(#b)"/><rect y="620" width="1600" height="280" fill="url(#f)"/><g transform="translate(0 900)"><g><animateTransform attributeName="transform" type="skewX" values="0;2.5;0;-1.5;0" dur="7s" repeatCount="indefinite"/><g transform="translate(0 -900)">${Array.from({ length: 70 }, (_, i) => `<path d="M${i * 23 + 4} 900 q6 -${150 + (i * 37) % 90} 14 -${200 + (i * 53) % 110}" stroke="#4a2c10" stroke-width="3" fill="none" opacity=".55"/>`).join('')}</g></g></g>`) },
-  photo: { name: 'Your photo' },
+  // Faith
+  cross: { name: 'The cross', group: 'Faith', css: scene(sky('g', [[0, '#140b26'], [.5, '#4b2552'], [.8, '#c46f57'], [1, '#f0bd7a']]) + BLUR,
+    `<rect width="1600" height="900" fill="url(#g)"/><g fill="#ffe2b0" opacity=".1">${breathe('opacity', '.05;.14;.05', 9)}<path d="M1180 470 L700 -50 H820Z"/><path d="M1180 470 L1050 -50 H1150Z"/><path d="M1180 470 L1400 -50 H1500Z"/><path d="M1180 470 L1650 120 V260Z"/><path d="M1180 470 L300 -50 H420Z"/></g><circle cx="1180" cy="560" r="230" fill="#ffd59a" opacity=".5" filter="url(#b)">${breathe('r', '230;275;230', 10)}</circle><path d="M0 900 V770 Q600 700 1000 640 Q1180 610 1350 650 Q1500 690 1600 700 V900Z" fill="#1a0c1c"/><g fill="#1a0c1c"><rect x="1168" y="400" width="24" height="250"/><rect x="1120" y="452" width="120" height="22"/></g>`) },
+  dove: { name: 'Dove', group: 'Faith', css: scene(sky('g', [[0, '#0b1a33'], [.6, '#1f3d6b'], [1, '#3b5d8f']]) + BLUR,
+    `<rect width="1600" height="900" fill="url(#g)"/><path d="M1300 -60 L980 900 H1600Z" fill="#fff" opacity=".07">${breathe('opacity', '.04;.11;.04', 8)}</path><circle cx="1300" cy="150" r="170" fill="#fff6dc" opacity=".35" filter="url(#b)"/><g fill="#fff" opacity=".88"><animateTransform attributeName="transform" type="translate" values="0 0;0 16;0 0" dur="6s" repeatCount="indefinite"/><g transform="translate(1300 150) scale(.7)"><path d="M-14 -2 L0 -46 L14 -2Z"/><path d="M-8 6 C-50 -40 -110 -62 -175 -52 C-125 -30 -78 -6 -40 20Z"/><path d="M8 6 C50 -40 110 -62 175 -52 C125 -30 78 -6 40 20Z"/><path d="M-46 14 C-20 2 22 2 46 14 C36 40 -24 44 -46 14Z"/><circle cx="0" cy="44" r="13"/><path d="M-6 54 L0 66 L6 54Z" fill="#f2c27e"/></g></g>${motes(30, 5, '#fff6dc')}`) },
+  bible: { name: 'Open Bible', group: 'Faith', css: scene(sky('g', [[0, '#0b0812'], [.7, '#24162c'], [1, '#3a2230']]) + BLUR,
+    `<rect width="1600" height="900" fill="url(#g)"/><path d="M800 -40 L600 790 H1000Z" fill="#ffe7bb" opacity=".07">${breathe('opacity', '.04;.1;.04', 7)}</path><ellipse cx="800" cy="770" rx="420" ry="190" fill="#ffd89a" opacity=".35" filter="url(#b)">${breathe('opacity', '.25;.45;.25', 7)}</ellipse>${motes(45, 3, '#ffe3ad')}<path d="M800 800 Q680 770 520 790 L500 860 Q660 840 800 875Z" fill="#efdcb5"/><path d="M800 800 Q920 770 1080 790 L1100 860 Q940 840 800 875Z" fill="#e6d0a4"/><g stroke="#b99a6c" stroke-width="2" opacity=".55"><path d="M560 805 Q680 795 770 818 M556 818 Q676 808 770 831 M552 831 Q672 821 770 844 M840 818 Q930 795 1040 805 M840 831 Q930 808 1044 818 M840 844 Q930 821 1048 831"/></g><path d="M800 800 V875" stroke="#8a6a44" stroke-width="3"/><path d="M500 860 Q660 840 800 875 Q940 840 1100 860 L1100 874 Q940 854 800 890 Q660 854 500 874Z" fill="#5a2c2c"/>`) },
+  rod: { name: 'Shepherd\'s rod', group: 'Faith', css: scene(sky('g', [[0, '#1a1030'], [.55, '#7a3a52'], [.8, '#e08a5a'], [1, '#f6c27c']]) + BLUR,
+    `<rect width="1600" height="900" fill="url(#g)"/><circle cx="480" cy="690" r="180" fill="#ffd28a" opacity=".55" filter="url(#b)">${breathe('r', '180;215;180', 9)}</circle><circle cx="480" cy="700" r="80" fill="#fff0cf" opacity=".85"/><path d="M0 900 V720 Q300 660 700 720 T1600 690 V900Z" fill="#3a1d33"/><path d="M0 900 V800 Q500 740 1000 790 T1600 770 V900Z" fill="#1b0d1a"/><path d="M1220 900 V430 C1220 330 1330 320 1345 395 C1352 440 1310 455 1292 430" fill="none" stroke="#1b0d1a" stroke-width="16" stroke-linecap="round"/><g fill="none" stroke="#2a1426" stroke-width="3" stroke-linecap="round">${drift(80, 30)}<path d="M600 300 q12 -10 24 0 q12 -10 24 0"/><path d="M680 260 q9 -8 18 0 q9 -8 18 0"/><path d="M560 250 q8 -7 16 0 q8 -7 16 0"/></g>`) },
+  sanctuary: { name: 'Sanctuary', group: 'Faith', css: scene(sky('g', [[0, '#07050a'], [1, '#1a1208']]) + BLUR + BLUR2,
+    `<rect width="1600" height="900" fill="url(#g)"/><ellipse cx="800" cy="680" rx="380" ry="230" fill="#e0a84a" opacity=".22" filter="url(#b)">${breathe('opacity', '.16;.3;.16', 6)}</ellipse>${motes(30, 9, '#ffd27a')}<g fill="none" stroke="#c9a24a" stroke-width="10" stroke-linecap="round">${[50, 100, 150].map(r => `<path d="M${800 - r} 680 A${r} ${r} 0 0 0 ${800 + r} 680"/>`).join('')}<path d="M800 680 V860"/></g><path d="M730 880 L760 850 H840 L870 880Z" fill="#c9a24a"/>${[-150, -100, -50, 0, 50, 100, 150].map((d, k) => `<rect x="${786 + d}" y="666" width="28" height="12" rx="3" fill="#c9a24a"/><ellipse cx="${800 + d}" cy="648" rx="7" ry="16" fill="#ffd27a"><animate attributeName="ry" values="16;19;15;17;16" dur="${(1.1 + k * .13).toFixed(2)}s" repeatCount="indefinite"/></ellipse><circle cx="${800 + d}" cy="646" r="34" fill="#ffc35a" opacity=".35" filter="url(#b2)"/>`).join('')}`) },
+  glass: { name: 'Stained glass', group: 'Faith', css: scene(BLUR + BLUR2 + '<clipPath id="c"><path d="M520 900 V360 Q520 110 800 60 Q1080 110 1080 360 V900Z"/></clipPath>',
+    `<rect width="1600" height="900" fill="#06040a"/><circle cx="800" cy="420" r="460" fill="#5a4a8a" opacity=".22" filter="url(#b)">${breathe('opacity', '.15;.3;.15', 9)}</circle><g clip-path="url(#c)" opacity=".3">${breathe('opacity', '.24;.38;.24', 9)}${panes()}</g><path d="M520 900 V360 Q520 110 800 60 Q1080 110 1080 360 V900" fill="none" stroke="#0d0812" stroke-width="22"/><ellipse cx="800" cy="880" rx="520" ry="60" fill="#8a6ad0" opacity=".18" filter="url(#b)"/>`) },
+  candles: { name: 'Candlelight', group: 'Faith', css: scene(sky('g', [[0, '#070405'], [1, '#1c0e07']]) + BLUR + BLUR2,
+    `<rect width="1600" height="900" fill="url(#g)"/>${bokeh(28, 13)}${[[1180, 260, 60], [1300, 190, 54], [1410, 230, 50], [230, 200, 56]].map(([x, h, w], k) => `<circle cx="${x}" cy="${880 - h}" r="110" fill="#ffb35c" opacity=".3" filter="url(#b)">${breathe('opacity', '.22;.36;.22', 2 + k * .4)}</circle><rect x="${x - w / 2}" y="${900 - h}" width="${w}" height="${h}" rx="6" fill="#efe3cc"/><path d="M${x} ${900 - h} v-12" stroke="#2a1a10" stroke-width="3"/><ellipse cx="${x}" cy="${872 - h}" rx="10" ry="24" fill="#ffd27a"><animate attributeName="ry" values="24;28;22;26;24" dur="${(1.2 + k * .17).toFixed(2)}s" repeatCount="indefinite"/></ellipse><ellipse cx="${x}" cy="${878 - h}" rx="4" ry="10" fill="#fff6dd"/>`).join('')}`) },
+  // Holy land
+  zion: { name: 'Mount Zion', group: 'Holy land', css: scene(sky('g', [[0, '#0c0f26'], [.6, '#3a2f5c'], [1, '#c08a6a']]) + BLUR,
+    `<rect width="1600" height="900" fill="url(#g)"/>${stars(70, 11)}<ellipse cx="800" cy="760" rx="700" ry="120" fill="#e9a07a" opacity=".3" filter="url(#b)"/>${skyline()}`) },
+  olive: { name: 'Gethsemane', group: 'Holy land', css: scene(sky('g', [[0, '#060a18'], [.7, '#14213d'], [1, '#26355a']]) + BLUR,
+    `<rect width="1600" height="900" fill="url(#g)"/>${stars(120, 21)}<circle cx="1250" cy="200" r="150" fill="#dfe6ff" opacity=".25" filter="url(#b)">${breathe('opacity', '.18;.3;.18', 10)}</circle><circle cx="1250" cy="200" r="58" fill="#f3ecd2"/><path d="M0 900 V790 Q400 740 900 790 T1600 780 V900Z" fill="#070b14"/><g fill="none" stroke="#070b14" stroke-linecap="round"><path d="M300 820 C312 760 268 700 300 640 C322 600 290 560 312 520" stroke-width="34"/><path d="M302 640 C250 610 210 590 170 560" stroke-width="16"/><path d="M306 600 C360 570 400 560 450 530" stroke-width="16"/></g><g fill="#0a1220">${[[300, 470, 150, 70], [190, 520, 100, 55], [420, 500, 110, 55], [250, 420, 110, 55], [360, 420, 100, 50], [150, 470, 80, 40], [460, 460, 80, 40]].map(([x, y, rx, ry]) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}"/>`).join('')}</g>`) },
+  pasture: { name: 'Green pastures', group: 'Holy land', css: scene(sky('g', [[0, '#1a2440'], [.6, '#6a6e8f'], [1, '#e1b98a']]) + BLUR,
+    `<rect width="1600" height="900" fill="url(#g)"/><g fill="#fff" opacity=".22" filter="url(#b)"><ellipse cx="400" cy="230" rx="300" ry="50">${drift(140, 40)}</ellipse><ellipse cx="1200" cy="160" rx="260" ry="44">${drift(-120, 34)}</ellipse></g><path d="M0 900 V700 Q400 640 800 690 T1600 670 V900Z" fill="#2a3d2c"/><path d="M0 900 V770 Q500 720 900 760 T1600 740 V900Z" fill="#182619"/>${[[120, 800], [210, 830], [300, 795], [170, 860], [1280, 790], [1380, 815], [1470, 785], [1330, 860], [1440, 850]].map(([x, y], k) => `<g transform="translate(${x} ${y})${k % 2 ? ' scale(-1 1)' : ''}"><ellipse rx="26" ry="17" fill="#e9e4d6" opacity=".92"/><ellipse cx="27" cy="-4" rx="8" ry="10" fill="#2a2622"/><path d="M-14 14 v12 M12 14 v12" stroke="#2a2622" stroke-width="4"/></g>`).join('')}`) },
+  rainbow: { name: 'Rainbow', group: 'Holy land', css: scene(sky('g', [[0, '#1c2a44'], [.6, '#56688c'], [1, '#c9a982']]) + BLUR,
+    `<rect width="1600" height="900" fill="url(#g)"/><g fill="none" stroke-width="14" opacity=".3">${breathe('opacity', '.2;.36;.2', 10)}${['#e0524a', '#ec8c3c', '#efc94c', '#6dbb5a', '#4a8fd0', '#5b5bbf', '#8a5ab8'].map((c, k) => `<circle cx="800" cy="1060" r="${720 - k * 14}" stroke="${c}"/>`).join('')}</g><g fill="#fff" opacity=".18" filter="url(#b)"><ellipse cx="250" cy="200" rx="320" ry="60">${drift(100, 36)}</ellipse><ellipse cx="1350" cy="260" rx="300" ry="56">${drift(-90, 30)}</ellipse></g><path d="M0 900 V760 Q400 700 800 750 T1600 730 V900Z" fill="#1d2b22"/><path d="M0 900 V820 Q600 780 1000 820 T1600 810 V900Z" fill="#13201a"/>`) },
+  // Plain and your photo
+  plain: { name: 'Plain', group: 'Plain and your photo' },
+  photo: { name: 'Your photo', group: 'Plain and your photo' },
 };
-let presBg = store.get('presBg') || 'plain';
+const BG_GROUPS = ['Faith', 'Holy land', 'Sky and nature', 'Plain and your photo'];
+let presBg = BACKGROUNDS[store.get('presBg')] ? store.get('presBg') : 'plain';
 let screenPhoto = '';   // on a screen, the leader's photo arrives over the connection
 const photoUrl = () => remote.role === 'screen' ? screenPhoto : store.get('presPhoto');
 function applyBg() {
@@ -1435,15 +1514,49 @@ function applyBg() {
   $('pBg').style.backgroundImage = css || '';
   $('present').classList.toggle('has-bg', !!css);
   $('present').classList.toggle('big', presSize > 1);
-  $('pBgs').innerHTML = Object.entries(BACKGROUNDS).map(([k, b]) => {
+  $('pBgs').innerHTML = BG_GROUPS.map(g => `<div class="p-bgs-h">${g}</div>` + Object.entries(BACKGROUNDS).filter(([, b]) => b.group === g).map(([k, b]) => {
     if (k === 'photo') return photoUrl()
       ? `<button data-bg="photo" aria-pressed="${presBg === 'photo'}" style="background-image: url('${photoUrl()}')"><span>Your photo</span></button><button class="add" data-bg="pick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span>New photo</span></button>`
       : `<button class="add" data-bg="pick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span>Your photo</span></button>`;
     return `<button data-bg="${k}" aria-pressed="${presBg === k}" style="${b.css ? `background-image: ${b.css.replace(/"/g, "'")}` : ''}"><span>${b.name}</span></button>`;
-  }).join('');
+  }).join('')).join('');
   document.querySelectorAll('[data-psize]').forEach(b => b.setAttribute('aria-pressed', +b.dataset.psize === presSize));
 }
-function showPanel(on) { $('pPanel').hidden = !on; $('pLook').setAttribute('aria-expanded', on); }
+// Fonts for the slides, chosen to be read from the back of a room. Classic follows the app's theme.
+const PRES_FONT_CSS = 'https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,700;1,700&family=Merriweather:ital,wght@0,700;1,700&family=Montserrat:ital,wght@0,600;1,600&family=Nunito:ital,wght@0,700;1,700&family=Oswald:wght@500&display=swap';
+const PRES_FONTS = {
+  classic: { name: 'Classic', note: 'Theme serif' },
+  clear: { name: 'Clear', note: 'Easiest to read', family: "'Atkinson Hyperlegible', sans-serif", weight: 700 },
+  strong: { name: 'Strong', note: 'Bold serif', family: "'Merriweather', Georgia, serif", weight: 700 },
+  modern: { name: 'Modern', note: 'Clean sans', family: "'Montserrat', sans-serif", weight: 600 },
+  rounded: { name: 'Rounded', note: 'Soft and friendly', family: "'Nunito', sans-serif", weight: 700 },
+  tall: { name: 'Tall', note: 'Fits more words', family: "'Oswald', sans-serif", weight: 500, italic: 'normal' },
+};
+let presFont = PRES_FONTS[store.get('presFont')] ? store.get('presFont') : 'classic';
+const loadPresFonts = () => {
+  if (!document.querySelector(`link[href="${PRES_FONT_CSS}"]`)) document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: PRES_FONT_CSS }));
+};
+function applyPresFont() {
+  const f = PRES_FONTS[presFont] || PRES_FONTS.classic, el = $('present');
+  if (f.family) { loadPresFonts(); el.dataset.pfont = presFont; } else delete el.dataset.pfont;
+  el.style.setProperty('--p-font', f.family || '');
+  if (!f.family) el.style.removeProperty('--p-font');
+  el.style.setProperty('--p-weight', f.weight || 400);
+  el.style.setProperty('--p-italic', f.italic || 'italic');
+  $('pFonts').innerHTML = Object.entries(PRES_FONTS).map(([k, x]) =>
+    `<button data-pfont="${k}" aria-pressed="${k === presFont}"><b style="font-family: ${(x.family || 'var(--lyric)').replace(/"/g, "'")}; font-weight: ${x.weight || 400}">${x.name}</b><span>${x.note}</span></button>`).join('');
+  if (pres) { stageKey = ''; fitSlide(); }
+}
+$('pFonts').addEventListener('click', e => {
+  const b = e.target.closest('[data-pfont]');
+  if (!b) return;
+  presFont = b.dataset.pfont; store.set('presFont', presFont);
+  applyPresFont();
+  if (pres) renderSlide();
+});
+// once a font has downloaded, the slide is sized again for it
+if (document.fonts) document.fonts.addEventListener('loadingdone', () => { if (pres) fitSlide(); });
+function showPanel(on) { $('pPanel').hidden = !on; $('pLook').setAttribute('aria-expanded', on); if (on) { loadPresFonts(); applyPresFont(); } }
 $('pLook').onclick = () => { showCast(false); showPanel($('pPanel').hidden); };
 $('pBgs').addEventListener('click', e => {
   const b = e.target.closest('[data-bg]');
@@ -1506,8 +1619,8 @@ function sendState() {
   if (remote.role !== 'leader') return;
   if (presBg === 'photo' && photoUrl() && remote.photoSent !== photoKey()) { linkSend({ t: 'photo', data: photoUrl() }); remote.photoSent = photoKey(); }
   linkSend(pres
-    ? { t: 'state', list: pres.list, i: pres.i, blank: pres.blank || null, size: presSize, bg: presBg }
-    : { t: 'state', list: [], i: 0, blank: 'logo', size: presSize, bg: presBg });
+    ? { t: 'state', list: pres.list, i: pres.i, blank: pres.blank || null, size: presSize, bg: presBg, font: presFont }
+    : { t: 'state', list: [], i: 0, blank: 'logo', size: presSize, bg: presBg, font: presFont });
 }
 function miniView(el, sl, blank, now) {
   el.className = 'mini' + (now ? ' now' : '') + (sl && !blank && sl.kind === 'chorus' ? ' is-chorus' : '');
@@ -1681,6 +1794,7 @@ function onScreenMessage(m) {
   $('pWait').hidden = true;
   presSize = m.size || 1;
   presBg = BACKGROUNDS[m.bg] ? m.bg : 'plain';
+  if ((PRES_FONTS[m.font] ? m.font : 'classic') !== presFont) { presFont = PRES_FONTS[m.font] ? m.font : 'classic'; applyPresFont(); stageKey = ''; }
   const listKey = (m.list || []).join() + '|' + presSize;
   if (listKey !== pres.listKey) { pres.list = (m.list || []).filter(n => song(n)); pres.slides = pres.list.flatMap(slidesFor); pres.listKey = listKey; }
   pres.i = Math.max(0, Math.min(m.i || 0, pres.slides.length - 1));
