@@ -285,7 +285,12 @@ svg.i { width: 20px; height: 20px; flex: none; }
 /* verse label sits above the verse, like the chorus label, so the words use the full width */
 .stanza .vn { display: block; font: 600 .7rem var(--ui); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
 .stanza p { margin: 0; min-width: 0; }
-.chorus { display: block; font: 400 var(--lyric-size)/1.55 var(--lyric); background: var(--surface-2); border-radius: var(--radius); padding: 14px 16px 16px; }
+.chorus {
+  display: block; font: 400 var(--lyric-size)/1.55 var(--lyric); border-radius: var(--radius); padding: 14px 16px 18px;
+  /* the refrain: a soft tint of the theme colour with a thin glowing edge */
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 24%, transparent), 0 10px 32px -12px color-mix(in srgb, var(--accent) 35%, transparent);
+}
 /* each sung line is its own centered block, with a little air between lines so a wrapped line reads as one */
 .ln { display: block; text-wrap: pretty; }
 .ln + .ln { margin-top: .3em; }
@@ -294,7 +299,17 @@ svg.i { width: 20px; height: 20px; flex: none; }
 .stanza p.flowing.long, .chorus p.flowing.long { text-wrap: pretty; }
 p.flowing .ln { display: inline; }
 p.flowing .ln + .ln { margin-top: 0; }
-.chorus .clabel { display: block; font: 600 .7rem var(--ui); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+.chorus .clabel {
+  display: inline-block; font: 600 .66rem var(--ui); letter-spacing: .14em; text-transform: uppercase; color: var(--accent);
+  margin-bottom: 8px; padding: 4px 10px 3px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 13%, transparent);
+}
+/* a small ornament between verses: two fading hairlines and a diamond */
+.orn { position: relative; width: 140px; height: 1px; margin: 2px auto; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 45%, transparent) 40%, transparent 46%, transparent 54%, color-mix(in srgb, var(--accent) 45%, transparent) 60%, transparent); }
+.orn::after { content: ""; position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; background: var(--accent); opacity: .7; transform: translate(-50%, -50%) rotate(45deg); border-radius: 1px; }
+/* tap a verse to follow along: it stays bright, the rest dim */
+.stanza, .chorus { transition: opacity .3s, transform .3s; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.stanzas.following > .stanza, .stanzas.following > .chorus, .stanzas.following > .orn { opacity: .28; }
+.stanzas.following > .is-focus { opacity: 1; transform: scale(1.015); }
 .chorus p { margin: 0; }
 
 .pager { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 44px; }
@@ -1233,15 +1248,15 @@ function render(n) {
       <div class="acts">${acts.replace(/<button/g, '<button class="pill"')}</div>
     </header>
     <div class="stanzas">
-      ${sections.map(sec => sec.label === 'Chorus'
+      ${sections.map((sec, k) => sec.label === 'Chorus'
         ? `<div class="chorus"><span class="clabel">Chorus</span><p class="${flowText ? 'flowing' : ''}">${linesHtml(sec)}</p></div>`
-        : `<div class="stanza"><span class="vn">Verse ${sec.label}</span><p class="${flowText ? 'flowing' : ''}">${linesHtml(sec)}</p></div>`).join('')}
+        : `${k ? '<div class="orn" aria-hidden="true"></div>' : ''}<div class="stanza"><span class="vn">Verse ${sec.label}</span><p class="${flowText ? 'flowing' : ''}">${linesHtml(sec)}</p></div>`).join('')}
     </div>
     <nav class="pager">
       ${prev ? `<button data-n="${prev.n}"><small>← No. ${prev.n}</small><span>${esc(prev.title)}</span></button>` : ''}
       ${next ? `<button class="next" data-n="${next.n}"><small>No. ${next.n} →</small><span>${esc(next.title)}</span></button>` : ''}
     </nav>
-    <p class="hint">Swipe left or right to change hymn · The screen stays on while a hymn is open</p>`;
+    <p class="hint">Tap a verse to follow along · Swipe left or right to change hymn · The screen stays on while a hymn is open</p>`;
   requestAnimationFrame(markLong);   // after the hymn is on screen, so it can be measured
 }
 
@@ -1255,7 +1270,14 @@ $('actMenu').addEventListener('click', e => { const a = e.target.closest('[data-
 $('song').addEventListener('click', e => {
   const a = e.target.closest('[data-act]'), st = e.target.closest('[data-svc-step]');
   if (st) { stepService(+st.dataset.svcStep); return; }
-  if (a) doAct(a.dataset.act);
+  if (a) { doAct(a.dataset.act); return; }
+  // tapping a verse or chorus follows along with it; tapping it again shows all
+  const blk = e.target.closest('.stanza, .chorus');
+  if (!blk) return;
+  const all = blk.parentElement, on = !blk.classList.contains('is-focus');
+  all.querySelectorAll('.is-focus').forEach(x => x.classList.remove('is-focus'));
+  blk.classList.toggle('is-focus', on);
+  all.classList.toggle('following', on);
 });
 
 function doAct(act) {
