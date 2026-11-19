@@ -227,7 +227,7 @@ svg.i { width: 20px; height: 20px; flex: none; }
 .num-badge { font: 600 .9rem var(--ui); font-variant-numeric: tabular-nums; color: var(--accent); background: var(--accent-soft); border-radius: 10px; min-width: 2.6rem; padding: 7px 0; text-align: center; }
 .row .t { font: 500 1.12rem/1.3 var(--lyric); min-width: 0; }
 .row .sub { display: block; font: 400 .8rem var(--ui); color: var(--muted); margin-top: 3px; }
-.row .quote { display: block; font: italic 400 .98rem/1.35 var(--lyric); color: var(--muted); margin-top: 3px; }
+.row .quote { display: block; font: 400 .98rem/1.35 var(--lyric); color: var(--muted); margin-top: 3px; }
 .row mark { background: var(--accent-soft); color: var(--accent); border-radius: 4px; padding: 0 2px; }
 .empty { padding: 48px 4px; color: var(--muted); text-align: center; font: italic 1.15rem var(--lyric); }
 
@@ -301,8 +301,13 @@ svg.i { width: 20px; height: 20px; flex: none; }
 /* each sung line is its own centered block, with a little air between lines so a wrapped line reads as one */
 .ln { display: block; text-wrap: pretty; }
 .ln + .ln { margin-top: .3em; }
+.stanza p.flowing, .chorus p.flowing { text-wrap: balance; }
+/* browsers balance only short paragraphs; longer ones use "pretty", which keeps a lone word off the last line */
+.stanza p.flowing.long, .chorus p.flowing.long { text-wrap: pretty; }
+p.flowing .ln { display: inline; }
+p.flowing .ln + .ln { margin-top: 0; }
 .chorus .clabel { display: block; font: 600 .7rem var(--ui); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
-.chorus p { margin: 0; font-style: italic; }
+.chorus p { margin: 0; }
 
 .pager { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 44px; }
 .pager button {
@@ -447,7 +452,6 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
 .p-stage { flex: 1; min-height: 0; position: relative; padding: 1vh 6vw; cursor: pointer; }
 .p-fit { width: 100%; height: 100%; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-family: var(--lyric); line-height: 1.32; }
 .p-label { font: 600 .32em var(--ui); letter-spacing: .18em; text-transform: uppercase; color: var(--stage-accent); margin-bottom: .7em; }
-.p-lines.it { font-style: italic; }
 .p-num { font: italic 400 2.2em/1 var(--display); color: var(--stage-accent); }
 .p-title { font: 400 1.25em/1.05 var(--display); margin: .15em 0 .4em; text-wrap: balance; }
 .p-meta { font: 400 .38em var(--ui); color: rgba(246, 239, 248, .6); }
@@ -505,7 +509,6 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
 .p-fonts button span { font: 500 .66rem var(--ui); color: rgba(246, 239, 248, .65); }
 .p-fonts button[aria-pressed="true"] { border-color: var(--stage-accent); box-shadow: inset 0 0 0 1px var(--stage-accent); }
 .p-fit { font-family: var(--p-font, var(--lyric)); font-weight: var(--p-weight, 400); }
-.p-lines.it { font-style: var(--p-italic, italic); }
 #present[data-pfont] .p-title { font-family: var(--p-font); font-weight: var(--p-weight); }
 .p-bgs button {
   aspect-ratio: 16 / 10; border-radius: 10px; border: 0; padding: 0; position: relative; overflow: hidden; color: #fff;
@@ -758,7 +761,7 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
   </div>
   <ul class="toc" id="toc" tabindex="-1" autofocus></ul>
   <div class="sheet-help"><button class="linkbtn" id="tourAgain">How to use the Hymnal</button><button class="linkbtn" id="useScreen">Use this device as the screen</button>
-    <span class="update-row" id="updateRow" hidden><span>Version Nov 17, 2026</span><button class="linkbtn" id="checkUpdate">Check for updates</button></span></div>
+    <span class="update-row" id="updateRow" hidden><span>Version Nov 19, 2026</span><button class="linkbtn" id="checkUpdate">Check for updates</button></span></div>
   <div class="sheet-foot" style="border-top: 0">
     <span>Theme <b id="themeName" style="color: var(--ink); font-weight: 500"></b></span>
     <div class="swatches" id="swatches" role="group" aria-label="Theme"></div>
@@ -875,7 +878,8 @@ let flowText = store.get('layout') !== 'printed';
 
 // Flowing mode shows each verse regrouped into a few longer lines (made by src/reformat.py and stored as
 // "flow"); they rewrap to the screen and the chosen size. As printed shows the PDF's own line breaks.
-const linesHtml = sec => ((flowText && sec.flow) || sec.lines).map(l => `<span class="ln">${esc(l)}</span>`).join('');
+// Flowing joins the verse into one paragraph that rewraps evenly at any text size; As printed keeps the PDF's lines.
+const linesHtml = sec => ((flowText && sec.flow) || sec.lines).map(l => `<span class="ln">${esc(l)}</span>`).join(flowText ? ' ' : '');
 const saveFavs = () => store.set('favs', JSON.stringify([...favs]));
 const saveService = () => store.set('service', JSON.stringify(service));
 
@@ -1151,7 +1155,16 @@ $('sharedNo').onclick = () => { $('shared').hidden = true; };
 // Hymn text is never smaller than 24px (1.5rem), which is also where it starts; smaller saved sizes are raised to it.
 const MIN_SIZE = 1.5, MAX_SIZE = 38 / 16;
 let size = Math.min(MAX_SIZE, Math.max(MIN_SIZE, parseFloat(store.get('lyricSize')) || MIN_SIZE));
-const applySize = () => document.documentElement.style.setProperty('--lyric-size', size + 'rem');
+const applySize = () => { document.documentElement.style.setProperty('--lyric-size', size + 'rem'); markLong(); };
+// flags flowing paragraphs over six lines, which get "pretty" wrapping instead of balanced
+function markLong() {
+  document.querySelectorAll('#song p.flowing').forEach(p => {
+    p.classList.remove('long');
+    p.classList.toggle('long', p.offsetHeight / parseFloat(getComputedStyle(p).lineHeight) > 6.2);
+  });
+}
+addEventListener('resize', markLong);
+if (document.fonts) document.fonts.addEventListener('loadingdone', markLong);
 applySize();
 // Tapping Aa opens a slider from 24 to 38; the size updates live as it moves.
 function renderSize() {
@@ -1233,14 +1246,15 @@ function render(n) {
     </header>
     <div class="stanzas">
       ${sections.map(sec => sec.label === 'Chorus'
-        ? `<div class="chorus"><span class="clabel">Chorus</span><p>${linesHtml(sec)}</p></div>`
-        : `<div class="stanza"><span class="vn">Verse ${sec.label}</span><p>${linesHtml(sec)}</p></div>`).join('')}
+        ? `<div class="chorus"><span class="clabel">Chorus</span><p class="${flowText ? 'flowing' : ''}">${linesHtml(sec)}</p></div>`
+        : `<div class="stanza"><span class="vn">Verse ${sec.label}</span><p class="${flowText ? 'flowing' : ''}">${linesHtml(sec)}</p></div>`).join('')}
     </div>
     <nav class="pager">
       ${prev ? `<button data-n="${prev.n}"><small>← No. ${prev.n}</small><span>${esc(prev.title)}</span></button>` : ''}
       ${next ? `<button class="next" data-n="${next.n}"><small>No. ${next.n} →</small><span>${esc(next.title)}</span></button>` : ''}
     </nav>
     <p class="hint">Swipe left or right to change hymn · The screen stays on while a hymn is open</p>`;
+  requestAnimationFrame(markLong);   // after the hymn is on screen, so it can be measured
 }
 
 const menuOpen = on => { $('actMenu').hidden = !on; $('moreBtn').setAttribute('aria-expanded', on); };
@@ -1407,7 +1421,7 @@ function fitSlide() {
 }
 const slideHtml = sl => sl.kind === 'title'
   ? `<div class="p-num">${sl.s.n}</div><div class="p-title">${esc(sl.s.title)}</div><div class="p-meta">${[sl.s.ref, sl.s.tune && 'Tune: ' + sl.s.tune].filter(Boolean).map(esc).join(' · ')}</div>`
-  : `<div class="p-label">${sl.kind === 'chorus' ? 'Chorus' : 'Verse ' + sl.sec.label}${sl.of ? ' · ' + sl.of : ''}</div><div class="p-lines${sl.kind === 'chorus' ? ' it' : ''}">${sl.part.map(l => `<span class="ln">${esc(l)}</span>`).join(' ')}</div>`;
+  : `<div class="p-label">${sl.kind === 'chorus' ? 'Chorus' : 'Verse ' + sl.sec.label}${sl.of ? ' · ' + sl.of : ''}</div><div class="p-lines">${sl.part.map(l => `<span class="ln">${esc(l)}</span>`).join(' ')}</div>`;
 // Puts a slide (or the black / welcome screen) on this device's stage: the old words fade out, the new ones fade up.
 let stageToken = 0, stageKey = '';
 function showOnStage(html, key, chorus, lyric) {
@@ -1644,7 +1658,7 @@ const PRES_FONTS = {
   strong: { name: 'Strong', note: 'Bold serif', family: "'Merriweather', Georgia, serif", weight: 700 },
   modern: { name: 'Modern', note: 'Clean sans', family: "'Montserrat', sans-serif", weight: 600 },
   rounded: { name: 'Rounded', note: 'Soft and friendly', family: "'Nunito', sans-serif", weight: 700 },
-  tall: { name: 'Tall', note: 'Fits more words', family: "'Oswald', sans-serif", weight: 500, italic: 'normal' },
+  tall: { name: 'Tall', note: 'Fits more words', family: "'Oswald', sans-serif", weight: 500 },
 };
 let presFont = PRES_FONTS[store.get('presFont')] ? store.get('presFont') : 'classic';
 const loadPresFonts = () => {
@@ -1656,7 +1670,6 @@ function applyPresFont() {
   el.style.setProperty('--p-font', f.family || '');
   if (!f.family) el.style.removeProperty('--p-font');
   el.style.setProperty('--p-weight', f.weight || 400);
-  el.style.setProperty('--p-italic', f.italic || 'italic');
   $('pFonts').innerHTML = Object.entries(PRES_FONTS).map(([k, x]) =>
     `<button data-pfont="${k}" aria-pressed="${k === presFont}"><b style="font-family: ${(x.family || 'var(--lyric)').replace(/"/g, "'")}; font-weight: ${x.weight || 400}">${x.name}</b><span>${x.note}</span></button>`).join('');
   if (pres) { stageKey = ''; fitSlide(); }
