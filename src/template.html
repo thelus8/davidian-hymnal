@@ -310,7 +310,7 @@ p.flowing .ln + .ln { margin-top: 0; }
 .stanza, .chorus { transition: opacity .3s, transform .3s; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .stanzas.following > .stanza, .stanzas.following > .chorus, .stanzas.following > .orn { opacity: .28; }
 .stanzas.following > .is-focus { opacity: 1; transform: scale(1.015); }
-.chorus p { margin: 0; }
+.chorus p { margin: 0; font-style: italic; }   /* a light italic marks the refrain */
 
 .pager { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 44px; }
 .pager button {
@@ -481,7 +481,7 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
 .p-fit.anim .p-title { animation-delay: .35s; }
 .p-fit.anim .p-meta { animation-delay: .7s; }
 /* the chorus glows warmly so the room knows it is the refrain */
-.p-fit.is-chorus .p-lines { color: #fff4e2; text-shadow: 0 0 .6em rgba(255, 196, 120, .35), 0 2px 18px rgba(0, 0, 0, .5); }
+.p-fit.is-chorus .p-lines { font-style: italic; color: #fff4e2; text-shadow: 0 0 .6em rgba(255, 196, 120, .35), 0 2px 18px rgba(0, 0, 0, .5); }
 .p-fit.is-chorus .p-label { color: #ffc98a; }
 @media (prefers-reduced-motion: reduce) {
   #present.has-bg .p-bg, .p-fit.anim * { animation: none !important; }
@@ -564,7 +564,7 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
 .mini.now { font-size: clamp(13px, 3.6vw, 20px); box-shadow: 0 0 0 2px var(--stage-accent); }
 .mini .p-num { font-size: 2.4em; } .mini .p-title { font-size: 1.4em; } .mini .p-meta { font-size: .7em; } .mini .p-label { font-size: .6em; margin-bottom: .4em; }
 .mini .p-lines { text-shadow: 0 1px 6px rgba(0, 0, 0, .6); }
-.mini.is-chorus .p-lines { color: #fff4e2; }
+.mini.is-chorus .p-lines { color: #fff4e2; font-style: italic; }
 .mini .p-kicker { font-size: .55em; }
 .mini-note { font: 500 .85rem var(--ui); color: rgba(246, 239, 248, .6); }
 .ctl-chips { display: flex; flex-wrap: wrap; gap: 8px; }
