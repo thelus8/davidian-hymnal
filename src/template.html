@@ -1,7 +1,7 @@
 <title>The Davidian Hymnal</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=EB+Garamond&family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
 <script>
 // The Hymnal lives at thelus8.github.io/davidian-hymnal. It spent a few days at davidianhymnal.netlify.app; copies
 // opened there come back here, bringing favorites, the service list and settings along in the link.
@@ -1190,18 +1190,19 @@ function renderSize() {
   $('sizeOut').innerHTML = px + (px <= 24 ? '<small>smallest</small>' : px >= 38 ? '<small>largest</small>' : '');
 }
 const sizeOpen = on => { $('sizePop').hidden = !on; $('sizeBtn').setAttribute('aria-expanded', on); if (on) { renderSize(); loadHymnFonts(); renderHymnFonts(); } };
-// Fonts for the hymn words, chosen in the Aa panel. Theme follows the colour theme's own serif.
+// Fonts for the hymn words, chosen in the Aa panel. EB Garamond is the default (it is in the main font file, so it
+// works offline from the first visit); Theme follows the colour theme's own serif.
 const HYMN_FONT_CSS = 'https://fonts.googleapis.com/css2?family=EB+Garamond&family=Crimson+Pro&family=Libre+Caslon+Text&family=Spectral&family=Lora&display=swap';
 const HYMN_FONTS = {
   theme: { name: 'Theme', note: 'Matches the theme' },
-  newsreader: { name: 'Newsreader', note: 'Elegant', family: "'Newsreader', Georgia, serif" },
   garamond: { name: 'EB Garamond', note: 'Classic hymn book', family: "'EB Garamond', Georgia, serif" },
+  newsreader: { name: 'Newsreader', note: 'Elegant', family: "'Newsreader', Georgia, serif" },
   crimson: { name: 'Crimson Pro', note: 'Graceful', family: "'Crimson Pro', Georgia, serif" },
   caslon: { name: 'Libre Caslon', note: 'Traditional', family: "'Libre Caslon Text', Georgia, serif" },
   spectral: { name: 'Spectral', note: 'Refined', family: "'Spectral', Georgia, serif" },
   lora: { name: 'Lora', note: 'Warm', family: "'Lora', Georgia, serif" },
 };
-let hymnFont = HYMN_FONTS[store.get('hymnFont')] ? store.get('hymnFont') : 'theme';
+let hymnFont = HYMN_FONTS[store.get('hymnFont')] ? store.get('hymnFont') : 'garamond';
 const loadHymnFonts = () => {
   if (!document.querySelector(`link[href="${HYMN_FONT_CSS}"]`)) document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: HYMN_FONT_CSS }));
 };

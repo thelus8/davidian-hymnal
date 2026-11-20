@@ -1,10 +1,10 @@
 // Offline support: the page is loaded fresh when online and from the cache when offline;
 // icons and Google Fonts are cached on install.
-const VERSION = 'hymnal-963d993684';
+const VERSION = 'hymnal-2f7a1782e7';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png'];
 
-const FONT_CSS = 'https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap';
+const FONT_CSS = 'https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=EB+Garamond&family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap';
 
 // Fetch the font stylesheet and every font file it names, so the first visit is enough to work offline.
 async function cacheFonts() {
