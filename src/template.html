@@ -6,7 +6,7 @@
 // The Hymnal lives at thelus8.github.io/davidian-hymnal. It spent a few days at davidianhymnal.netlify.app; copies
 // opened there come back here, bringing favorites, the service list and settings along in the link.
 const HOME = 'https://thelus8.github.io/davidian-hymnal/';
-const CARRY = ['favs', 'service', 'theme', 'palette', 'lyricSize', 'layout', 'repeat', 'sort', 'presBg', 'presSize', 'toured', 'last'];
+const CARRY = ['favs', 'service', 'theme', 'palette', 'hymnFont', 'lyricSize', 'layout', 'repeat', 'sort', 'presBg', 'presSize', 'toured', 'last'];
 try {
   if (location.hostname.endsWith('netlify.app')) {
     const data = {};
@@ -244,6 +244,15 @@ svg.i { width: 20px; height: 20px; flex: none; }
 .size-pop .size-row span { font: 600 .85rem var(--lyric); color: var(--muted); }
 .size-pop .size-row span + input + span { font-size: 1.5rem; }
 .size-pop input[type=range] { flex: 1; min-width: 0; height: 32px; accent-color: var(--accent); }
+.size-pop .font-h { margin: 14px 0 8px; font: 500 .8rem var(--ui); color: var(--muted); }
+.hymn-fonts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.hymn-fonts button {
+  min-height: 46px; padding: 6px 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink);
+  display: grid; justify-items: start; text-align: left; gap: 1px;
+}
+.hymn-fonts button b { font-weight: 400; font-size: 1.12rem; line-height: 1.15; }
+.hymn-fonts button span { font: 500 .66rem var(--ui); color: var(--muted); }
+.hymn-fonts button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 
 .song { padding-block: 22px 40px; }
 .svc-strip {
@@ -281,12 +290,12 @@ svg.i { width: 20px; height: 20px; flex: none; }
 }
 
 .stanzas { display: grid; gap: 24px; max-width: 40em; margin-inline: auto; text-align: center; }
-.stanza { font: 400 var(--lyric-size)/1.55 var(--lyric); }
+.stanza { font: 400 var(--lyric-size)/1.55 var(--hymn-font, var(--lyric)); }
 /* verse label sits above the verse, like the chorus label, so the words use the full width */
 .stanza .vn { display: block; font: 600 .7rem var(--ui); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
 .stanza p { margin: 0; min-width: 0; }
 .chorus {
-  display: block; font: 400 var(--lyric-size)/1.55 var(--lyric); border-radius: var(--radius); padding: 14px 16px 18px;
+  display: block; font: 400 var(--lyric-size)/1.55 var(--hymn-font, var(--lyric)); border-radius: var(--radius); padding: 14px 16px 18px;
   /* the refrain: a soft tint of the theme colour with a thin glowing edge */
   background: color-mix(in srgb, var(--accent) 8%, var(--surface));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 24%, transparent), 0 10px 32px -12px color-mix(in srgb, var(--accent) 35%, transparent);
@@ -670,6 +679,8 @@ dialog.pad[open] { animation: rise .22s cubic-bezier(.2, .8, .2, 1); }
     <div class="size-pop" id="sizePop" role="dialog" aria-label="Text size" hidden>
       <div class="head"><span>Text size</span><output id="sizeOut" for="sizeRange"></output></div>
       <div class="size-row"><span aria-hidden="true">A</span><input type="range" id="sizeRange" min="24" max="38" step="1" aria-label="Text size"><span aria-hidden="true">A</span></div>
+      <div class="font-h">Font</div>
+      <div class="hymn-fonts" id="hymnFonts" role="group" aria-label="Hymn font"></div>
     </div>
   </div>
   <article class="wrap song" id="song"></article>
@@ -1178,7 +1189,40 @@ function renderSize() {
   $('sizeRange').value = px;
   $('sizeOut').innerHTML = px + (px <= 24 ? '<small>smallest</small>' : px >= 38 ? '<small>largest</small>' : '');
 }
-const sizeOpen = on => { $('sizePop').hidden = !on; $('sizeBtn').setAttribute('aria-expanded', on); if (on) renderSize(); };
+const sizeOpen = on => { $('sizePop').hidden = !on; $('sizeBtn').setAttribute('aria-expanded', on); if (on) { renderSize(); loadHymnFonts(); renderHymnFonts(); } };
+// Fonts for the hymn words, chosen in the Aa panel. Theme follows the colour theme's own serif.
+const HYMN_FONT_CSS = 'https://fonts.googleapis.com/css2?family=EB+Garamond&family=Crimson+Pro&family=Libre+Caslon+Text&family=Spectral&family=Lora&display=swap';
+const HYMN_FONTS = {
+  theme: { name: 'Theme', note: 'Matches the theme' },
+  newsreader: { name: 'Newsreader', note: 'Elegant', family: "'Newsreader', Georgia, serif" },
+  garamond: { name: 'EB Garamond', note: 'Classic hymn book', family: "'EB Garamond', Georgia, serif" },
+  crimson: { name: 'Crimson Pro', note: 'Graceful', family: "'Crimson Pro', Georgia, serif" },
+  caslon: { name: 'Libre Caslon', note: 'Traditional', family: "'Libre Caslon Text', Georgia, serif" },
+  spectral: { name: 'Spectral', note: 'Refined', family: "'Spectral', Georgia, serif" },
+  lora: { name: 'Lora', note: 'Warm', family: "'Lora', Georgia, serif" },
+};
+let hymnFont = HYMN_FONTS[store.get('hymnFont')] ? store.get('hymnFont') : 'theme';
+const loadHymnFonts = () => {
+  if (!document.querySelector(`link[href="${HYMN_FONT_CSS}"]`)) document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: HYMN_FONT_CSS }));
+};
+function applyHymnFont() {
+  const f = HYMN_FONTS[hymnFont];
+  if (f.family) { loadHymnFonts(); document.documentElement.style.setProperty('--hymn-font', f.family); }
+  else document.documentElement.style.removeProperty('--hymn-font');
+  markLong();
+}
+function renderHymnFonts() {
+  $('hymnFonts').innerHTML = Object.entries(HYMN_FONTS).map(([k, f]) =>
+    `<button data-hfont="${k}" aria-pressed="${k === hymnFont}"><b style="font-family: ${(f.family || 'var(--lyric)').replace(/"/g, "'")}">${f.name}</b><span>${f.note}</span></button>`).join('');
+}
+$('hymnFonts').addEventListener('click', e => {
+  e.stopPropagation();   // the buttons are redrawn, so the tap must not count as a tap outside the panel
+  const b = e.target.closest('[data-hfont]');
+  if (!b) return;
+  hymnFont = b.dataset.hfont; store.set('hymnFont', hymnFont);
+  applyHymnFont(); renderHymnFonts();
+});
+applyHymnFont();
 $('sizeBtn').onclick = e => { e.stopPropagation(); menuOpen(false); sizeOpen($('sizePop').hidden); };
 $('sizeRange').oninput = () => { size = +$('sizeRange').value / 16; applySize(); renderSize(); };
 $('sizeRange').onchange = () => store.set('lyricSize', size);
